@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>1 MG Trader | Customer Ledger</title>
+
+<style>
+body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0;padding-bottom:100px}
+.main-header{background:#2c3e50;color:#fff;padding:15px 30px;display:flex;justify-content:space-between;align-items:center}
+.header-clock{font-family:Courier New;font-size:18px;background:rgba(255,255,255,.1);padding:5px 15px;border-radius:5px;border:1px solid #3498db}
+.nav-bar{background:#34495e;padding:10px;text-align:center;margin-bottom:20px}
+.nav-bar a{color:#fff;text-decoration:none;margin:0 15px;font-weight:bold}
+
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;padding:0 20px;margin-bottom:20px}
+.stat-card{padding:20px;border-radius:12px;box-shadow:0 5px 15px rgba(0,0,0,.1);text-align:center;color:#fff}
+.stat-debit{background:linear-gradient(135deg,#e74c3c,#c0392b)}
+.stat-credit{background:linear-gradient(135deg,#27ae60,#1e8449)}
+.stat-black{background:linear-gradient(135deg,#f1c40f,#f39c12)}
+
+.cust-layout{display:flex;padding:0 20px;gap:20px}
+.cust-form{flex:1.2;background:#fff;padding:25px;border-radius:15px;box-shadow:0 4px 15px rgba(0,0,0,.1)}
+.cust-list{flex:2.8;background:#fff;padding:25px;border-radius:15px;box-shadow:0 4px 15px rgba(0,0,0,.1)}
+
+label{font-size:11px;font-weight:bold;color:#3498db;text-transform:uppercase}
+input{width:100%;padding:10px;border:1px solid #d1d9e0;border-radius:8px;margin-bottom:10px}
+
+/* Filters Container ko set karne ke liye */
+.filter-panel {
+    background: #fff3f3;
+    padding: 20px;            /* Thora zyada padding taake andar jagah bane */
+    border-radius: 12px;
+    margin-bottom: 25px;      /* Table se fasla */
+    border: 1px solid #ffcdd2;
+    display: flex;            /* Ek line mein lane ke liye */
+    flex-wrap: wrap;          /* Mobile par wrap hone ke liye */
+    gap: 20px;                /* Inputs ke darmiyan 20px ka fasla (Touch nahi honge) */
+    align-items: flex-end;    /* Labels aur inputs ko neechay se align karega */
+}
+
+/* Har filter group (Label + Input) ki setting */
+.filter-group {
+    flex: 1;                  /* Barabar jagah gherna */
+    min-width: 180px;         /* Mobile par thori width barkaraar rakhna */
+    display: flex;
+    flex-direction: column;   /* Label upar aur input niche */
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 8px;       /* Label aur Input ke darmiyan fasla */
+    color: #4528c6;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.filter-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #d1d9e0;
+    border-radius: 8px;
+    box-sizing: border-box;   /* Padding se input box bada nahi hoga */
+    margin-bottom: 0px !important; /* Purana margin khatam karein */
+}
+
+/* فارم کا بیک گراؤنڈ اور بارڈر */
+.cust-form {
+    flex: 1.2;
+    background: #fafff8; /* ہلکا سا نیلا شیڈ */
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    border: 1px solid #e1e8f0;
+}
+
+/* لیبلز کا رنگ اور اسٹائل */
+.cust-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #34495e; /* گہرا پروفیشنل رنگ */
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ان پٹ باکسز پر تھوڑا فوکس ایفیکٹ */
+.cust-form input {
+    margin-bottom: 15px;
+    border: 1.5px solid #d1d9e0;
+    transition: all 0.3s ease;
+}
+
+.cust-form input:focus {
+    border-color: #3498db;
+    outline: none;
+    box-shadow: 0 0 8px rgba(52, 152, 219, 0.2);
+}
+
+@media(max-width:900px){
+    .filter-panel{
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media(max-width:500px){
+    .filter-panel{
+        grid-template-columns: 1fr;
+    }
+}
+/* سیو بٹن کا ڈیزائن */
+.btn-save {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #27ae60, #cc2eb7); /* گریڈینٹ کلر */
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+    text-transform: uppercase;
+    transition: all 0.3s transform;
+    box-shadow: 0 4px 15px rgba(24, 26, 156, 0.3);
+}
+
+/* بٹن پر ماؤس لے جانے سے اثر */
+.btn-save:hover {
+    transform: translateY(-2px); /* تھوڑا سا اوپر اٹھے گا */
+    box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+}
+
+.btn-save:active {
+    transform: translateY(0);
+}
+
+table{width:100%;border-collapse:collapse}
+th{background:#f8f9fa;padding:12px;border-bottom:2px solid #dee2e6}
+td{padding:12px;border-bottom:1px solid #eee}
+
+.blacklisted{background:#ffebee!important;border-left:6px solid #e74c3c}
+
+.btn-action{padding:8px 12px;border:none;border-radius:6px;cursor:pointer;color:#fff;font-weight:bold;margin-right:4px}
+
+.modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.8)}
+.modal-content{background:#fff;margin:3% auto;padding:25px;width:85%;border-radius:15px;max-height:85vh;overflow-y:auto}
+</style>
+</head>
+
+<body onload="initPage()">
+
+<div class="main-header">
+<div id="headerDate"></div>
+<h1>👥 CUSTOMER LEDGER</h1>
+<div class="header-clock" id="digitalClock"></div>
+</div>
+
+
+<nav class="nav-bar"> 
+       <button onclick="syncSales()" style="
+padding:8px 15px;
+background:#2980b9;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+margin:10px 20px;
+">
+🔄 Refresh Sales Udhar
+</button>
+<a href="index.html">Home</a>
+<a href="sales.html">Sales</a>
+<a href="workers.html">Workers</a>
+</nav>
+
+<div class="stats-grid">
+<div class="stat-card stat-debit"><h3>Total Udhar</h3><p id="tDebit">0</p></div>
+<div class="stat-card stat-credit"><h3>Total Wasool</h3><p id="tCredit">0</p></div>
+<div class="stat-card stat-black"><h3>Blacklisted</h3><p id="tBlack">0</p></div>
+</div>
+
+<div class="cust-layout">
+
+<div class="cust-form">
+<h3 id="formTitle">💰 New Entry</h3>
+    
+    <label>Date & Time</label>
+    <input type="datetime-local" id="cDate">
+    
+    <label>Customer Name</label>
+    <input type="text" id="cName" placeholder="Enter Full Name">
+    
+    <label>Mobile Number</label>
+    <input type="text" id="cPhone" placeholder="03xxxxxxxxx">
+    
+    <label>Shop/Home Address</label>
+    <input type="text" id="cAddress" placeholder="Area or City">
+    
+    <label>Debit Amount (Udhaar +)</label>
+    <input type="number" id="cDebit" value="0">
+    
+    <label>Credit Amount (Wasooli -)</label>
+    <input type="number" id="cCredit" value="0">
+    
+    <button onclick="saveEntry()" style="width:100%;padding:15px;background:#27ae60;color:#fff;border:none;border-radius:10px;cursor:pointer;font-weight:bold;">💾 Save Record</button>
+</div>
+
+<div class="cust-list">
+
+<div class="filter-panel"> 
+    <div class="filter-group">
+        <label>Amount Limit</label>
+        <input type="number" id="limitFilter" value="50000" oninput="renderTable()">
+    </div>
+
+    <div class="filter-group">
+        <label>Date Limit</label>
+        <input type="date" id="dateFilter" onchange="renderTable()">
+    </div>
+
+    <div class="filter-group">
+        <label>Entry Limit</label>
+        <input type="number" id="freqFilter" value="10" oninput="renderTable()">
+    </div>
+
+    <div class="filter-group">
+        <label>Search</label>
+        <input type="text" id="searchBox" placeholder="Search customer..." onkeyup="renderTable()">
+    </div>
+</div>
+
+
+<table>
+<thead>
+<tr>
+  <th>Customer</th>
+  <th>Last Activity</th>
+  <th>Balance</th>
+  <th>Status</th>
+  <th>Action</th>
+</tr>
+</thead>
+
+<tbody id="custTableBody"></tbody>
+</table>
+
+</div>
+</div>
+
+<div id="histModal" class="modal">
+<div class="modal-content">
+<span onclick="closeModal()" style="float:right;font-size:30px;cursor:pointer">&times;</span>
+<h2 id="modalTitle"></h2>
+<table>
+<thead><tr><th>Date</th><th>Note</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead>
+<tbody id="histBody"></tbody>
+</table>
+</div>
+</div>
+
+<script>
+/* ================== CONFIG ================== */
+const STORAGE_KEY = 'mg_customers_ledger';
+const SALES_KEY   = 'mg_sales';
+const ADMIN_PASS  = '123';
+
+/* ================== DATA ================== */
+let ledger = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+let editTarget = null;
+
+/* ================== INIT ================== */
+function initPage(){
+    startClock();
+    renderTable();
+}
+
+/* ================== CLOCK ================== */
+function startClock(){
+    setInterval(()=>{
+        let d = new Date();
+        digitalClock.innerText = d.toLocaleTimeString();
+        headerDate.innerText = d.toLocaleDateString();
+    },1000);
+}
+
+/* ================== SAFE SALES SYNC (MANUAL) ================== */
+function syncSales(){
+    let sales = JSON.parse(localStorage.getItem(SALES_KEY)) || [];
+    let updated = false;
+
+    sales.forEach(s=>{
+        if(!s.cust || !s.total) return;
+
+        let name = s.cust.trim();
+        if(!name) return;
+
+        if(!ledger[name]){
+            ledger[name] = {
+                phone:'',
+                address:'',
+                balance:0,
+                history:[]
+            };
+        }
+
+        let billNote = 'Bill #' + (s.id || s.date || '');
+
+        // duplicate protection
+        if(ledger[name].history.some(h => h.note === billNote)) return;
+
+        let amt = Number(s.total) || 0;
+        ledger[name].balance = Number(ledger[name].balance) || 0;
+        ledger[name].balance += amt;
+
+        ledger[name].history.push({
+            date: s.date || new Date().toLocaleString(),
+            note: billNote,
+            debit: amt,
+            credit: 0,
+            balance: ledger[name].balance
+        });
+
+        updated = true;
+    });
+
+    if(updated){
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(ledger));
+        alert('Sales udhar sync ho gaya');
+        renderTable();
+    } else {
+        alert('Koi naya udhar nahi mila');
+    }
+}
+
+/* ================== SAVE MANUAL ENTRY ================== */
+function saveEntry(){
+    let name = cName.value.trim();
+    if(!name) return alert('Customer name required');
+
+    if(!ledger[name]){
+        ledger[name] = { phone:'', address:'', balance:0, history:[] };
+    }
+
+    ledger[name].phone   = cPhone.value || ledger[name].phone;
+    ledger[name].address = cAddress.value || ledger[name].address;
+
+    let debit  = Number(cDebit.value)  || 0;
+    let credit = Number(cCredit.value) || 0;
+
+    let bal = Number(ledger[name].balance) || 0;
+    bal += debit - credit;
+    ledger[name].balance = bal;
+
+    if(debit || credit){
+        ledger[name].history.push({
+            date: cDate.value || new Date().toLocaleString(),
+            note: debit ? 'Manual Debit' : 'Manual Credit',
+            debit: debit,
+            credit: credit,
+            balance: bal
+        });
+    }
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(ledger));
+    location.reload();
+}
+
+/* ================== RENDER TABLE (FINAL) ================== */
+function renderTable(){
+
+    let search = (searchBox.value || '').toLowerCase();
+    let limit  = Number(limitFilter.value) || 0;
+
+    let html = '';
+    let tDebit = 0, tCredit = 0, tBlack = 0;
+
+    Object.keys(ledger).forEach(name => {
+
+        let c = ledger[name];
+        if(!c) return;
+
+        let bal = Number(c.balance) || 0;
+
+        // SEARCH
+        let searchStr =
+            name.toLowerCase() +
+            ' ' + (c.phone || '').toLowerCase() +
+            ' ' + (c.address || '').toLowerCase();
+
+        if(search && !searchStr.includes(search)) return;
+
+        // LAST ACTIVITY
+        let last = (c.history && c.history.length)
+            ? c.history[c.history.length - 1]
+            : null;
+
+        let lastActivity = last
+            ? `<b>${last.date}</b><br><small>${last.note}</small>`
+            : '—';
+
+        // BLACKLIST
+        let isBlack = limit > 0 && bal >= limit;
+        if(isBlack) tBlack++;
+
+        // TOTALS
+        if(bal > 0) tDebit += bal;
+        else tCredit += Math.abs(bal);
+
+        html += `
+        <tr class="${isBlack ? 'blacklisted' : ''}">
+            <td>
+                <b>${name}</b><br>
+                <small>📱 ${c.phone || '-'} | 📍 ${c.address || '-'}</small>
+            </td>
+
+            <td>${lastActivity}</td>
+
+            <td>
+                <b style="color:${bal > 0 ? '#e74c3c' : '#27ae60'}">
+                    Rs. ${bal.toLocaleString()}
+                </b>
+            </td>
+
+            <td>
+                <b style="color:${isBlack ? '#c62828' : '#2e7d32'}">
+                    ${isBlack ? 'BLACKLIST' : 'ACTIVE'}
+                </b>
+            </td>
+
+            <td>
+                <button class="btn-action" style="background:#3498db"
+                    onclick="viewHistory('${name.replace(/'/g,"\\'")}')">📜</button>
+
+                <button class="btn-action" style="background:#f39c12"
+                    onclick="editCust('${name.replace(/'/g,"\\'")}')">✏️</button>
+
+                <button class="btn-action" style="background:#e74c3c"
+                    onclick="deleteRec('${name.replace(/'/g,"\\'")}')">🗑️</button>
+            </td>
+        </tr>`;
+    });
+
+    custTableBody.innerHTML = html;
+    tDebitEl = document.getElementById('tDebit');
+    tCreditEl = document.getElementById('tCredit');
+    tBlackEl = document.getElementById('tBlack');
+
+    if(tDebitEl)  tDebitEl.innerText  = 'Rs. ' + tDebit.toLocaleString();
+    if(tCreditEl) tCreditEl.innerText = 'Rs. ' + tCredit.toLocaleString();
+    if(tBlackEl)  tBlackEl.innerText  = tBlack;
+}
+
+/* ================== HISTORY ================== */
+function viewHistory(name){
+    let c = ledger[name];
+    if(!c) return;
+
+    modalTitle.innerText = 'Ledger: ' + name;
+
+    let rows = c.history.map(h=>`
+        <tr>
+            <td>${h.date}</td>
+            <td>${h.note}</td>
+            <td>${h.debit ? '+'+h.debit : '-'}</td>
+            <td>${h.credit ? '-'+h.credit : '-'}</td>
+            <td>${(Number(h.balance)||0).toLocaleString()}</td>
+        </tr>
+    `).reverse().join('');
+
+    histBody.innerHTML = rows || '<tr><td colspan="5">No history</td></tr>';
+    histModal.style.display = 'block';
+}
+
+/* ================== EDIT ================== */
+function editCust(name){
+    if(prompt('Admin Password') !== ADMIN_PASS) return alert('Wrong password');
+    let c = ledger[name];
+    if(!c) return;
+
+    editTarget = name;
+    cName.value = name;
+    cPhone.value = c.phone || '';
+    cAddress.value = c.address || '';
+}
+
+/* ================== DELETE ================== */
+function deleteRec(name){
+    if(!confirm('Delete ' + name + '?')) return;
+    delete ledger[name];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(ledger));
+    renderTable();
+}
+
+/* ================== MODAL ================== */
+function closeModal(){
+    histModal.style.display = 'none';
+}
+</script>
+
+<footer style="position: fixed; bottom: 0; left: 0; width: 100%; background: #2c3e50; color: white; padding: 10px 0; overflow: hidden; z-index: 100;">
+    <div class="ticker-text" style="display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite;">
+        Offline Local System | 1 MG Trader | Managed by Management System | All Rights Reserved 2024-25
+    </div>
+</footer>
+
+<style>
+@keyframes marquee {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+}
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>1 MG Trader | Company Ledger Management</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding-bottom: 50px; }
+        .header { background: #2c3e50; color: white; padding: 20px; text-align: center; }
+        .container { max-width: 1100px; margin: 20px auto; padding: 0 20px; }
+        
+        /* Stylish Input Boxes Like Sales.html */
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        label { font-size: 11px; font-weight: bold; color: #3498db; text-transform: uppercase; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-top: 5px; box-sizing: border-box; }
+        
+        .btn-add { background: #27ae60; color: white; padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 16px; margin-top: 10px; }
+        
+        /* Ledger Table */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        th { background: #34495e; color: white; padding: 12px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
+        .balance-red { color: #e74c3c; font-weight: bold; }
+        .balance-green { color: #27ae60; font-weight: bold; }
+        
+        .history-btn { background: #3498db; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body onload="initCompany()">
+
+<div class="header">
+    <h1>🏢 Company & Supplier Ledger</h1>
+    <p>Manage Invoices, Payments & Stock History</p>
+    <nav style="margin-top: 10px;">
+        <a href="index.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">🏠 Dashboard</a>
+        <a href="workers.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">👥 Workers</a>
+    
+</div>
+
+<div class="container">
+    <div class="card">
+        <h3>➕ Add New Company or Update Khata</h3>
+        <div class="grid-4">
+            <div>
+                <label>Select Company</label>
+                <input list="compList" id="compName" placeholder="Search or Type New Company...">
+                <datalist id="compList"></datalist>
+            </div>
+            <div><label>Invoice Number</label><input type="text" id="invNo" placeholder="INV-001"></div>
+            <div><label>Invoice Amount (Purchase)</label><input type="number" id="purchaseAmt" value="0"></div>
+            <div><label>Paid Amount (Cash Out)</label><input type="number" id="paidAmt" value="0"></div>
+        </div>
+        <div class="grid-4">
+            <div style="grid-column: span 2;"><label>Description / Item Details</label><input type="text" id="invNote" placeholder="e.g. 1000 Liters Oil Paint, 500 Brushes"></div>
+            <div>
+    <label>Date & Time</label>
+    <input type="datetime-local" id="invDateTime">
+</div>
+            <div><button class="btn-add" onclick="saveTransaction()">💾 Save Transaction</button></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>📋 Company Wise Balances (Ledger Book)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Company Name</th>
+                    <th>Total Purchase</th>
+                    <th>Total Paid</th>
+                    <th>Remaining Balance</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="companyTableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="historyModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:80%; height:80%; background:white; box-shadow:0 0 100px rgba(0,0,0,0.5); border-radius:15px; padding:20px; overflow-y:auto; z-index:1000;">
+    <button onclick="document.getElementById('historyModal').style.display='none'" style="float:right; background:red; color:white;">Close X</button>
+    <h2 id="modalTitle">Company History</h2>
+    <table id="historyTable">
+        <thead><tr><th>Date</th><th>Invoice</th><th>Description</th><th>Debit (-)</th><th>Credit (+)</th><th>Balance</th></tr></thead>
+        <tbody id="historyBody"></tbody>
+    </table>
+</div>
+
+<script>
+    let companies = JSON.parse(localStorage.getItem('mg_companies')) || {};
+
+    function initCompany() {
+        document.getElementById('invDate').valueAsDate = new Date();
+        renderCompanies();
+        updateDatalist();
+    }
+
+    function updateDatalist() {
+        let list = document.getElementById('compList');
+        list.innerHTML = Object.keys(companies).map(c => `<option value="${c}">`).join('');
+    }
+
+    function saveTransaction() {
+    // Sahi IDs ka istemal
+    let name = document.getElementById('compName').value.trim();
+    let inv = document.getElementById('invNo').value || "N/A";
+    let purchase = parseFloat(document.getElementById('purchaseAmt').value) || 0;
+    let paid = parseFloat(document.getElementById('paidAmt').value) || 0;
+    let note = document.getElementById('invNote').value;
+    
+    // Yahan ID check karein jo humne 'invDateTime' rakhi thi
+    let dateTimeInput = document.getElementById('invDateTime'); 
+    let dateTime = dateTimeInput ? dateTimeInput.value : new Date().toISOString();
+
+    if(!name) { 
+        alert("⚠️ Malik! Pehle Company ka naam to likhen."); 
+        return; 
+    }
+
+    // Data Load/Initialize
+    let companies = JSON.parse(localStorage.getItem('mg_companies')) || {};
+    
+    if(!companies[name]) {
+        companies[name] = { totalPurchase: 0, totalPaid: 0, balance: 0, history: [] };
+    }
+
+    // Calculation Logic
+    let prevBalance = companies[name].balance;
+    let newBalance = prevBalance + purchase - paid;
+
+    // Entry Object
+    let entry = {
+        date: dateTime, // Date aur Time dono save honge
+        inv: inv,
+        note: note,
+        purchase: purchase,
+        paid: paid,
+        balance: newBalance
+    };
+
+    // History update
+    companies[name].history.push(entry);
+    companies[name].totalPurchase += purchase;
+    companies[name].totalPaid += paid;
+    companies[name].balance = newBalance;
+
+    // Save to Memory
+    localStorage.setItem('mg_companies', JSON.stringify(companies));
+    
+    alert("✅ Transaction Saved! " + name + " ka khata update ho gaya.");
+    
+    // Page refresh taake table update ho jaye
+    location.reload();
+}
+
+    function renderCompanies() {
+        let html = "";
+        for(let name in companies) {
+            let c = companies[name];
+            html += `<tr>
+                <td><b>${name}</b></td>
+                <td>Rs. ${c.totalPurchase.toLocaleString()}</td>
+                <td>Rs. ${c.totalPaid.toLocaleString()}</td>
+                <td class="${c.balance > 0 ? 'balance-red' : 'balance-green'}">Rs. ${c.balance.toLocaleString()}</td>
+                <td><button class="history-btn" onclick="viewHistory('${name}')">📖 View History</button></td>
+            </tr>`;
+        }
+        document.getElementById('companyTableBody').innerHTML = html || "<tr><td colspan='5'>No companies added yet.</td></tr>";
+    }
+
+    function viewHistory(name) {
+    let c = companies[name];
+    document.getElementById('modalTitle').innerText = name + " - Ledger History";
+    let html = c.history.map(h => `
+        <tr>
+            <td>${h.date.replace('T', ' ')}</td> <td>${h.inv}</td>
+            <td>${h.note}</td>
+            <td style="color:red">+ ${h.purchase}</td>
+            <td style="color:green">- ${h.paid}</td>
+            <td><b>${h.balance}</b></td>
+        </tr>
+    `).reverse().join('');
+    document.getElementById('historyBody').innerHTML = html;
+    document.getElementById('historyModal').style.display = 'block';
+}
+    function initCompany() {
+    let now = new Date();
+    // Local time format for datetime-local input
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('invDateTime').value = now.toISOString().slice(0, 16);
+    
+    renderCompanies();
+    updateDatalist();
+}
+</script>
+   <footer style="position: fixed; bottom: 0; left: 0; width: 100%; background: #2c3e50; color: white; padding: 10px 0; overflow: hidden; z-index: 100;">
+    <div class="ticker-text" style="display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite;">
+        Offline Local System | 1 MG Trader | Managed by Management System | All Rights Reserved 2024-25
+    </div>
+</footer>
+
+<style>
+@keyframes marquee {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+}
+</body>
+</html>

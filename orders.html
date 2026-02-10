@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>1 MG Trader | Pro Order Booking</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding-bottom: 80px; }
+        .main-header { background: #2c3e50; color: white; padding: 15px; text-align: center; }
+        .nav-bar { background: #34495e; padding: 10px; text-align: center; margin-bottom: 20px; }
+        .nav-bar a { color: white; text-decoration: none; margin: 0 15px; font-weight: bold; }
+        
+        .order-container { max-width: 1100px; margin: auto; padding: 0 20px; }
+        .order-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 25px; }
+        
+        /* Colorful Input Groups [Target: Stylish UI] */
+        .input-group { border-radius: 10px; padding: 12px; margin-bottom: 10px; transition: 0.3s; border: 1px solid transparent; }
+        .bg-blue   { background: #eef7ff; border-left: 6px solid #3498db; } /* Date */
+        .bg-purple { background: #f5f0ff; border-left: 6px solid #8e44ad; } /* Booker ID */
+        .bg-green  { background: #f0fff4; border-left: 6px solid #27ae60; } /* Customer */
+        .bg-orange { background: #fffaf0; border-left: 6px solid #e67e22; } /* Address */
+        
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        label { font-size: 11px; font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 5px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
+        
+        /* Item Section */
+        .item-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 10px; align-items: end; background: #f8f9fa; padding: 15px; border-radius: 10px; margin-top: 20px; }
+        .btn-add-item { background: #3498db; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        
+        /* History & Table */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: #34495e; color: white; padding: 12px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
+        
+        .history-item { border-left: 6px solid #27ae60; background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .status-badge { float: right; padding: 5px 12px; border-radius: 6px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        .pending { background: #fff3cd; color: #856404; }
+        .delivered { background: #d4edda; color: #155724; }
+
+        .btn-book { background: #27ae60; color: white; padding: 20px; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; width: 100%; font-size: 20px; margin-top: 20px; box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3); }
+        .bill-summary { font-size: 26px; color: #2c3e50; font-weight: bold; text-align: right; margin-top: 15px; }
+    </style>
+</head>
+<body onload="init()">
+
+<header class="main-header">
+    <h1>📦 1 MG TRADER | SMART ORDER SYSTEM</h1>
+</header>
+
+<nav class="nav-bar">
+    <a href="index.html">🏠 Dashboard</a>
+    <a href="products.html">📦 Inventory</a>
+    <a href="orders.html" style="border-bottom: 2px solid white;">📝 Orders</a>
+</nav>
+
+<div class="order-container">
+    <div class="order-card">
+        <h3 style="margin-top:0; color:#2c3e50;">👤 Customer & Booker Details</h3>
+        <div class="form-grid">
+            <div class="input-group bg-blue">
+                <label style="color: #2980b9;">📅 Order Date</label>
+                <input type="datetime-local" id="orderDate">
+            </div>
+            <div class="input-group bg-purple">
+                <label style="color: #8e44ad;">🔑 Booker ID (Access)</label>
+                <input type="text" id="bookerID" placeholder="e.g. adminM">
+            </div>
+            <div class="input-group bg-green">
+                <label style="color: #27ae60;">🏪 Shop Name</label>
+                <input type="text" id="shopName" placeholder="Shop Name">
+            </div>
+            <div class="input-group bg-green">
+                <label style="color: #27ae60;">📱 Mobile Number</label>
+                <input type="text" id="shopMobile" maxlength="11" placeholder="03XXXXXXXXX">
+            </div>
+        </div>
+        <div class="input-group bg-orange">
+            <label style="color: #e67e22;">📍 Delivery Address</label>
+            <input type="text" id="shopAddress" placeholder="Full Area/Street Address">
+        </div>
+
+        <h3 style="border-top:1px solid #eee; padding-top:20px; margin-top:20px;">🛒 Add Products</h3>
+        <div class="item-row">
+            <div>
+                <label>Item Name</label>
+                <input list="stockList" id="itemInput" oninput="updatePrice()">
+                <datalist id="stockList"></datalist>
+            </div>
+            <div><label>Price</label><input type="number" id="unitPrice" readonly></div>
+            <div><label>Qty</label><input type="number" id="orderQty" value="1" oninput="calcSub()"></div>
+            <div><label>Subtotal</label><input type="number" id="subtotal" readonly></div>
+            <button class="btn-add-item" onclick="addItemToList()">➕ ADD</button>
+        </div>
+
+        <table>
+            <thead><tr><th>Item</th><th>Price</th><th>Qty</th><th>Total</th><th>Action</th></tr></thead>
+            <tbody id="itemsBody"></tbody>
+        </table>
+
+        <div class="bill-summary">Grand Total: Rs. <span id="displayTotal">0</span></div>
+        <button class="btn-book" onclick="confirmOrder()">🚀 SAVE ORDER</button>
+    </div>
+      <div class="order-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h3 style="margin:0;">📋 Order History</h3>
+        <input type="text" id="searchHistory" onkeyup="filterHistory()" 
+               placeholder="🔍 Search Shop, ID or Address..." 
+               style="width: 300px; padding: 10px; border-radius: 20px; border: 1px solid #ddd;">
+    </div>
+    <div id="orderHistoryList"></div>
+</div>
+    <div class="order-card">
+        <h3>📋 Order History (Old + New Records)</h3>
+        <div id="orderHistoryList"></div>
+    </div>
+</div>
+
+<script>
+    let products = JSON.parse(localStorage.getItem('mg_final_products')) || [];
+    let orders = JSON.parse(localStorage.getItem('mg_orders')) || [];
+    let currentOrderItems = [];
+
+    function init() {
+        let now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('orderDate').value = now.toISOString().slice(0, 16);
+        document.getElementById('stockList').innerHTML = products.map(p => `<option value="${p.name}">`).join('');
+        renderHistory();
+    }
+
+    function updatePrice() {
+        let item = products.find(p => p.name === document.getElementById('itemInput').value);
+        if(item) {
+            document.getElementById('unitPrice').value = item.sale || item.price;
+            calcSub();
+        }
+    }
+
+    function calcSub() {
+        let p = parseFloat(document.getElementById('unitPrice').value) || 0;
+        let q = parseFloat(document.getElementById('orderQty').value) || 0;
+        document.getElementById('subtotal').value = p * q;
+    }
+
+    function addItemToList() {
+        let name = document.getElementById('itemInput').value;
+        let pr = parseFloat(document.getElementById('unitPrice').value) || 0;
+        let qt = parseFloat(document.getElementById('orderQty').value) || 0;
+        if(!name || qt <= 0) return alert("Please select item and quantity!");
+
+        currentOrderItems.push({ name, pr, qt, sub: pr * qt });
+        renderCurrentTable();
+        document.getElementById('itemInput').value = "";
+        document.getElementById('unitPrice').value = "";
+        document.getElementById('orderQty').value = "1";
+    }
+
+    function renderCurrentTable() {
+        let html = ""; let gTotal = 0;
+        currentOrderItems.forEach((it, index) => {
+            gTotal += it.sub;
+            html += `<tr><td>${it.name}</td><td>${it.pr}</td><td>${it.qt}</td><td>${it.sub}</td>
+            <td onclick="currentOrderItems.splice(${index},1);renderCurrentTable()" style="cursor:pointer;color:red;font-weight:bold;">✖</td></tr>`;
+        });
+        document.getElementById('itemsBody').innerHTML = html;
+        document.getElementById('displayTotal').innerText = gTotal;
+    }
+
+    function confirmOrder() {
+    let bId = document.getElementById('bookerID').value.trim();
+    let shop = document.getElementById('shopName').value.trim();
+    
+    // 1. SAHI KEY USE KAREIN: mg_final_workers (Jo admin aur worker page use kar rahe hain)
+    let workers = JSON.parse(localStorage.getItem('mg_final_workers')) || [];
+    
+    // 2. Worker ko ID se dhoondna (workerId field check karein)
+    let worker = workers.find(u => u.workerId === bId);
+
+    if(!worker) {
+        alert("❌ Error: Invalid Worker ID! Ye ID database mein nahi hai.");
+        return;
+    }
+    
+    // 3. Status Check logic
+    if(worker.status === "Inactive") {
+        // Admin ke liye alert save karna
+        let alerts = JSON.parse(localStorage.getItem('admin_alerts')) || [];
+        alerts.push({ 
+            time: new Date().toLocaleString(), 
+            msg: `Security: Inactive Worker (ID: ${bId}) ne ${shop} ke liye order book karne ki koshish ki.` 
+        });
+        localStorage.setItem('admin_alerts', JSON.stringify(alerts));
+        
+        alert("❌ DENIED: Aapka Account INACTIVE hai! Admin se rabta karen.");
+        return;
+    }
+
+    // 4. Baki Validation
+    if(!shop || currentOrderItems.length === 0) {
+        alert("⚠️ Shop Name aur kam se kam 1 item add karen!");
+        return;
+    }
+
+    // 5. Order Object
+    let newOrder = {
+        id: Date.now(),
+        booker: bId,
+        shop: shop,
+        address: document.getElementById('shopAddress').value,
+        mobile: document.getElementById('shopMobile').value,
+        items: [...currentOrderItems],
+        total: document.getElementById('displayTotal').innerText,
+        date: document.getElementById('orderDate').value.replace('T', ' '),
+        status: 'Pending'
+    };
+
+    // 6. Save Order
+    let orders = JSON.parse(localStorage.getItem('mg_orders')) || [];
+    orders.unshift(newOrder);
+    localStorage.setItem('mg_orders', JSON.stringify(orders));
+    
+    alert("✅ Order Saved Successfully!");
+    location.reload();
+}
+
+    function renderHistory() {
+    let html = orders.map(ord => {
+        // Support for Old Data (ord.item) and New Data (ord.items)
+        let itemsPreview = "";
+        if (ord.items && Array.isArray(ord.items)) {
+            itemsPreview = ord.items.map(i => `• ${i.name} (${i.qt} x ${i.pr})`).join('<br>');
+        } else {
+            itemsPreview = `• ${ord.item || 'N/A'} (Qty: ${ord.qty || 0})`;
+        }
+
+        return `
+            <div class="history-item">
+                <span class="status-badge ${ord.status.toLowerCase()}">${ord.status}</span>
+                <b style="font-size:17px; color:#2c3e50;">${ord.shop}</b> <br>
+                <small>🆔 Booker: ${ord.booker} | 📅 ${ord.date}</small><br>
+                <small>📍 Address: ${ord.address || 'N/A'}</small>
+                <div style="font-size:12px; margin:10px 0; color:#444; background:#f9f9f9; padding:8px; border-radius:5px;">
+                    ${itemsPreview}
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                    <button onclick="printOrderInvoice(${ord.id})" style="background:#3498db; color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:5px;">
+                        🖨️ Print Bill
+                    </button>
+                    <div style="font-weight:bold; color:#27ae60; font-size:18px;">Rs. ${ord.total}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    document.getElementById('orderHistoryList').innerHTML = html || "No history available.";
+}
+       function printOrderInvoice(id) {
+    let ord = orders.find(o => o.id === id);
+    if(!ord) return;
+
+    let printWindow = window.open('', '', 'height=800,width=600');
+    
+    // Items ki table rows banana
+    let itemsRows = "";
+    if (ord.items && Array.isArray(ord.items)) {
+        itemsRows = ord.items.map(i => `
+            <tr>
+                <td>${i.name}</td>
+                <td>${i.pr}</td>
+                <td>${i.qt}</td>
+                <td>${i.sub}</td>
+            </tr>`).join('');
+    } else {
+        itemsRows = `<tr><td>${ord.item}</td><td>${ord.price}</td><td>${ord.qty}</td><td>${ord.total}</td></tr>`;
+    }
+
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Print Order - MG Trader</title>
+            <style>
+                body { font-family: sans-serif; padding: 20px; color: #333; }
+                .bill-head { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
+                .logo { font-size: 28px; font-weight: bold; color: #2c3e50; }
+                .details { display: flex; justify-content: space-between; margin: 20px 0; font-size: 13px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                th { background: #f2f2f2; }
+                th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+                .total-sec { text-align: right; margin-top: 20px; font-size: 20px; font-weight: bold; }
+                .status-stamp { 
+                    display: inline-block; padding: 5px 15px; border: 2px solid; border-radius: 5px; 
+                    transform: rotate(-5deg); text-transform: uppercase; font-weight: bold; margin-top: 10px;
+                }
+                .qr-section { text-align: center; margin-top: 30px; border-top: 1px dashed #ccc; padding-top: 15px; }
+            </style>
+        </head>
+        <body>
+            <div class="bill-head">
+                <div class="logo">📦 MG TRADER</div>
+                <p>Official Order Confirmation</p>
+            </div>
+
+            <div class="details">
+                <div>
+                    <b>SHOP DETAILS:</b><br>
+                    ${ord.shop}<br>
+                    ${ord.address}<br>
+                    Ph: ${ord.mobile}
+                </div>
+                <div style="text-align: right;">
+                    <b>ORDER INFO:</b><br>
+                    Date: ${ord.date}<br>
+                    Booker: ${ord.booker}<br>
+                    <span class="status-stamp" style="color:${ord.status === 'Pending' ? '#f39c12' : '#27ae60'};">
+                        ${ord.status}
+                    </span>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr><th>Item Description</th><th>Price</th><th>Qty</th><th>Subtotal</th></tr>
+                </thead>
+                <tbody>
+                    ${itemsRows}
+                </tbody>
+            </table>
+
+            <div class="total-sec">Grand Total: Rs. ${ord.total}</div>
+
+            <div class="qr-section">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=MG-ORDER-${ord.id}" alt="QR">
+                <p style="font-size: 10px;">Scan to Verify Order Details Online</p>
+                <p style="font-size: 12px; margin-top: 10px;"><i>Thank you for your business!</i></p>
+            </div>
+
+            <script>
+                window.onload = function() { window.print(); window.close(); };
+            <\/script>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+}
+     function filterHistory() {
+    let val = document.getElementById('searchHistory').value.toUpperCase();
+    // Saare history items ko pakad lo
+    let items = document.getElementsByClassName('history-item');
+
+    for (let i = 0; i < items.length; i++) {
+        // Agar likha hua lafz shop name, ID ya address mein mil jaye to dikhao, warna chhupa do
+        if (items[i].innerText.toUpperCase().includes(val)) {
+            items[i].style.display = "";
+        } else {
+            items[i].style.display = "none";
+        }
+    }
+}
+</script>
+      <footer style="position: fixed; bottom: 0; left: 0; width: 100%; background: #2c3e50; color: white; padding: 10px 0; overflow: hidden; z-index: 100;">
+    <div class="ticker-text" style="display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite;">
+        Offline Local System | 1 MG Trader | Managed by Management System | All Rights Reserved 2024-25
+    </div>
+
+</footer>
+
+<style>
+@keyframes marquee {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+}
+</body>
+</html>

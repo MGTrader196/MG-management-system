@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1 MG Trader | Secure Portal</title>
+    <style>
+        body { 
+            background: radial-gradient(circle at center, #2c3e50 0%, #000000 100%); 
+            display: flex; justify-content: center; align-items: center; 
+            height: 100vh; margin: 0; font-family: 'Segoe UI', sans-serif; color: white;
+            overflow: hidden;
+        }
+        .top-system-bar {
+            position: fixed; top: 0; width: 100%; padding: 10px 30px;
+            display: flex; justify-content: space-between; font-size: 12px;
+            background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1);
+            box-sizing: border-box; letter-spacing: 1px; z-index: 100;
+        }
+        .form-container { width: 420px; position: relative; }
+        
+        .login-box { 
+            width: 100%; background: rgba(255, 255, 255, 0.08); 
+            padding: 50px 40px; border-radius: 30px; 
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5); text-align: center;
+            backdrop-filter: blur(20px); border: 1.5px solid rgba(255,255,255,0.1);
+            box-sizing: border-box; transition: 0.5s;
+        }
+
+        .header-icon {
+            width: 70px; height: 70px; background: #3498db; margin: -85px auto 20px;
+            border-radius: 20px; display: flex; justify-content: center; align-items: center;
+            font-size: 30px; box-shadow: 0 0 20px rgba(52, 152, 219, 0.6); transform: rotate(-10deg);
+        }
+        h2 { margin: 0; font-size: 32px; letter-spacing: 2px; font-weight: 800; }
+        .sub-text { color: #3498db; font-size: 13px; font-weight: bold; margin-bottom: 30px; text-transform: uppercase; }
+        
+        .input-group { margin-bottom: 20px; text-align: left; position: relative; }
+        label { color: #bdc3c7; font-size: 11px; margin-bottom: 8px; display: block; letter-spacing: 1px; }
+        
+        /* Input & Eye Container */
+        .pass-wrapper { display: flex; align-items: center; position: relative; }
+        input { 
+            width: 100%; padding: 15px; background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; 
+            color: white; font-size: 16px; outline: none; transition: 0.4s; box-sizing: border-box;
+        }
+        input:focus { border-color: #3498db; box-shadow: 0 0 15px rgba(52, 152, 219, 0.3); }
+
+        .toggle-btn {
+            position: absolute; right: 15px; background: none; border: none;
+            color: #bdc3c7; cursor: pointer; font-size: 18px; outline: none;
+        }
+
+        .btn-login { 
+            width: 100%; padding: 16px; border-radius: 12px; cursor: pointer; 
+            font-size: 16px; font-weight: 900; text-transform: uppercase; border: none;
+            background: #3498db; color: white; box-shadow: 0 10px 20px rgba(52, 152, 219, 0.4);
+            margin-bottom: 15px; transition: 0.3s;
+        }
+        .btn-reg { 
+            width: 100%; padding: 16px; border-radius: 12px; cursor: pointer; 
+            font-size: 16px; font-weight: 900; text-transform: uppercase; 
+            border: 2px solid #27ae60; background: transparent; color: #27ae60;
+        }
+
+        #msg { margin-top: 15px; font-size: 13px; font-weight: bold; display: none; padding: 10px; border-radius: 8px; }
+        .error { color: #ff7675; background: rgba(255, 118, 117, 0.1); }
+        
+        .reset-btn {
+            margin-top: 25px; background: rgba(231, 76, 60, 0.2); color: #e74c3c; 
+            padding: 8px 15px; border-radius: 8px; font-size: 10px; border: 1px solid #e74c3c;
+            cursor: pointer; opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+
+<div class="top-system-bar">
+    <div id="liveDate">DATE: --/--/----</div>
+    <div>🔒 SECURE ERP TERMINAL</div>
+    <div id="liveClock">TIME: 00:00:00</div>
+</div>
+
+<div class="form-container">
+    <div class="login-box" id="loginArea">
+        <div class="header-icon">📦</div>
+        <h2>1 MG TRADER</h2>
+        <div class="sub-text">Inventory ERP System</div>
+        
+        <div class="input-group">
+            <label>ENTER USER ID</label>
+            <input type="text" id="uId" placeholder="User ID">
+        </div>
+        
+        <div class="input-group">
+            <label>ENTER PASSWORD</label>
+            <div class="pass-wrapper">
+                <input type="password" id="uPass" placeholder="••••••••">
+                <button class="toggle-btn" onclick="togglePass('uPass')">👁️</button>
+            </div>
+        </div>
+        
+        <div id="msg"></div>
+
+        <button class="btn-login" onclick="doLogin()">Authenticate Access</button>
+        <button class="btn-reg" onclick="window.location.href='registration.html'">Create Account</button>
+        
+        <button class="reset-btn" onclick="localStorage.removeItem('userDB'); location.reload();">
+            ⚠️ Reset Login System (Click only once)
+        </button>
+    </div>
+
+    <div class="login-box" id="regArea" style="display: none; border-color: #27ae60;">
+        <div class="header-icon" style="background: #27ae60;">📝</div>
+        <h2>REGISTER</h2>
+        <div class="sub-text" style="color: #27ae60;">Create Worker Request</div>
+        
+        <div class="input-group"><label>FULL NAME</label><input type="text" id="regName" placeholder="Name"></div>
+        <div class="input-group"><label>CHOOSE USER ID</label><input type="text" id="regId" placeholder="ID"></div>
+        <div class="input-group">
+            <label>CHOOSE PASSWORD</label>
+            <div class="pass-wrapper">
+                <input type="password" id="regPass" placeholder="••••••••">
+                <button class="toggle-btn" onclick="togglePass('regPass')">👁️</button>
+            </div>
+        </div>
+        
+        <button class="btn-login" style="background: #27ae60;" onclick="submitReg()">Submit Request</button>
+        <button class="btn-reg" style="border-color: #95a5a6; color: #95a5a6;" onclick="toggleView(false)">Back to Login</button>
+    </div>
+</div>
+
+<script>
+    // Login function jo aapki file mein pehle se hai, usay update kiya hai
+    function login() {
+        let id = document.getElementById('loginId').value.trim();
+        let pass = document.getElementById('loginPass').value.trim();
+        
+        // Admin approved users yahan se check honge
+        let users = JSON.parse(localStorage.getItem('userDB')) || [];
+        const msg = document.getElementById('msg');
+
+        if(!id || !pass) {
+            msg.innerText = "⚠ Credentials Required!";
+            msg.style.display = "block";
+            return;
+        }
+
+        // User dhoondna aur uska password match karna
+        const user = users.find(u => u.id === id && u.pass === pass);
+
+        if(user) {
+            sessionStorage.setItem("isLoggedIn", "true");
+            sessionStorage.setItem("userRole", user.type); // Role save kiya
+            sessionStorage.setItem("activeUser", user.name);
+
+            // 🚩 ROLE BASED REDIRECTION
+            if(user.type === "Seller") {
+                window.location.href = "sales.html";
+            } 
+            else if(user.type === "Order Booker") {
+                window.location.href = "orders.html";
+            } 
+            else if(user.type === "Admin") {
+                window.location.href = "index.html"; // Admin dashboard par jayega
+            }
+            else {
+                alert("Role issue! Malik se rabta karein.");
+            }
+        } else {
+            msg.innerText = "❌ Access Denied: Galat ID ya Password!";
+            msg.style.display = "block";
+        }
+    }
+
+    function toggleView(isReg) {
+        document.getElementById('loginArea').style.display = isReg ? 'none' : 'block';
+        document.getElementById('regArea').style.display = isReg ? 'block' : 'none';
+    }
+
+    // Naya Registration function jo Admin Approval ke liye request bhejay ga
+    function submitReg() {
+        let name = document.getElementById('regName').value.trim();
+        let id = document.getElementById('regId').value.trim();
+        let pass = document.getElementById('regPass').value.trim();
+        let role = document.getElementById('regRole').value; // Dropdown se role uthayega
+
+        if(name && id && pass) {
+            let pending = JSON.parse(localStorage.getItem('pendingUsers')) || [];
+            
+            // Request structure
+            pending.push({ 
+                name: name, 
+                id: id, 
+                pass: pass, 
+                type: role, // Seller, Order Booker, ya Admin
+                time: new Date().toLocaleString() 
+            });
+
+            localStorage.setItem('pendingUsers', JSON.stringify(pending));
+            alert("✅ Request Sent! Malik (Admin) ke approve karne ka intezar karein.");
+            toggleView(false);
+        } else {
+            alert("Sari tafseelat likhen!");
+        }
+    }
+</script>
+         <footer style="position: fixed; bottom: 0; left: 0; width: 100%; background: #2c3e50; color: white; padding: 10px 0; overflow: hidden; z-index: 100;">
+    <div class="ticker-text" style="display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite;">
+        Offline Local System | 1 MG Trader | Managed by Management System | All Rights Reserved 2024-25
+    </div>
+</footer>
+
+<style>
+@keyframes marquee {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+}
+</body>
+</html>

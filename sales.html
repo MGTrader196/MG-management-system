@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>1 MG Trader | Professional Billing</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding-bottom: 20px; }
+        .main-header { background: #2c3e50; color: white; padding: 15px; text-align: center; }
+        .nav-bar { background: #34495e; padding: 10px; text-align: center; margin-bottom: 20px; }
+        .nav-bar a { color: white; text-decoration: none; margin: 0 15px; font-weight: bold; }
+        .sales-container { display: flex; gap: 20px; padding: 0 20px; }
+        .billing-section { flex: 3; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .calc-section { width: 280px; background: #1a252f; padding: 20px; border-radius: 12px; color: white; }
+        #calc-display { width: 100%; height: 50px; background: #2c3e50; border: none; color: #2ecc71; text-align: right; padding: 10px; font-size: 24px; border-radius: 6px; margin-bottom: 10px; box-sizing: border-box; }
+        .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .calc-grid button { padding: 15px 5px; font-size: 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; color: white; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        .bill-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .bill-table th { background: #f4f7f6; padding: 10px; text-align: left; border-bottom: 2px solid #ddd; }
+        .bill-table td { padding: 10px; border-bottom: 1px solid #eee; }
+        .history-card { margin: 20px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .search-bar { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #3498db; border-radius: 8px; box-sizing: border-box; }
+        .btn-paid { background: #27ae60; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; flex: 1; font-size: 16px; }
+        .btn-udhar { background: #e67e22; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; flex: 1; font-size: 16px; }
+        .action-btns { display: flex; gap: 10px; margin-top: 20px; }
+        
+        /* New Style for History Buttons */
+        .btn-h-edit { background: #f39c12; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; margin-right: 2px; }
+        .btn-h-view { background: #3498db; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; margin-right: 2px; }
+        .btn-h-del { background: #e74c3c; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; }
+
+        #print-area { display: none; }
+        @media print { .no-print { display: none !important; } #print-area { display: block !important; width: 300px; margin: auto; font-family: 'Courier New', monospace; font-size: 12px; } }
+    </style>
+</head>
+<body>
+
+<div class="no-print">
+    <header class="main-header"><h2>🛒 SALES & BILLING | 1 MG TRADER</h2></header>
+    <nav class="nav-bar">
+        <a href="index.html">🏠 Dashboard</a>
+        <a href="sales.html">🛒 Sales</a>
+        <a href="products.html">📦 Stock</a>
+        <a href="customers.html">👤 Customers</a>
+    </nav>
+
+    <div class="sales-container">
+        <div class="billing-section">
+            <h3 id="modeTitle">🛒 New Sale</h3>
+            <div class="form-grid">
+                <div><label>Bill Date & Time</label><input type="datetime-local" id="billDateTime"></div>
+                <div><label>Inv #</label><input type="text" id="billNo" readonly></div>
+                <div><label>Customer Name</label><input type="text" id="custName" placeholder="Guest"></div>
+                <div><label>Phone</label><input type="text" id="custPhone" maxlength="11" placeholder="03XXXXXXXXX"></div>
+                <div><label>Area</label><input type="text" id="custArea" placeholder="Area Name"></div>
+            </div>
+
+            <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr 1fr 0.5fr;">
+                <div><label>Item</label><input list="stockList" id="itemInput" oninput="checkPrice()"><datalist id="stockList"></datalist></div>
+                <div><label>Price</label><input type="number" id="itemPrice"></div>
+                <div><label>Qty</label><input type="number" id="itemQty"></div>
+                <div><label>Disc%</label><input type="number" id="itemDisc" value="0"></div>
+                <div><label>&nbsp;</label><button onclick="addItem()" style="background:#2ecc71; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; width:100%;">ADD</button></div>
+            </div>
+
+            <table class="bill-table">
+                <thead><tr><th>Item</th><th>Price</th><th>Qty</th><th>Total</th><th>X</th></tr></thead>
+                <tbody id="billItems"></tbody>
+            </table>
+
+            <div style="text-align: right; margin-top: 20px;">
+                <h2 style="color:#2c3e50;">Grand Total: Rs. <span id="grandTotal">0</span></h2>
+                <div class="action-btns">
+                    <button class="btn-paid" onclick="saveAndPrint('Paid')">💰 CASH PAID</button>
+                    <button class="btn-udhar" onclick="saveAndPrint('Udhar')">📝 SAVE AS UDHAR</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="calc-section">
+            <input type="text" id="calc-display" readonly placeholder="0">
+            <div class="calc-grid">
+                <button style="background:#e74c3c;" onclick="calcC()">C</button>
+                <button style="background:#34495e;" onclick="calcIn('/')">/</button>
+                <button style="background:#34495e;" onclick="calcIn('*')">*</button>
+                <button style="background:#e67e22;" onclick="calcIn('-')">-</button>
+                <button style="background:#34495e;" onclick="calcIn('7')">7</button>
+                <button style="background:#34495e;" onclick="calcIn('8')">8</button>
+                <button style="background:#34495e;" onclick="calcIn('9')">9</button>
+                <button style="background:#e67e22;" onclick="calcIn('+')">+</button>
+                <button style="background:#34495e;" onclick="calcIn('4')">4</button>
+                <button style="background:#34495e;" onclick="calcIn('5')">5</button>
+                <button style="background:#34495e;" onclick="calcIn('6')">6</button>
+                <button style="background:#27ae60; grid-row: span 2;" onclick="calcRes()">=</button>
+                <button style="background:#34495e;" onclick="calcIn('1')">1</button>
+                <button style="background:#34495e;" onclick="calcIn('2')">2</button>
+                <button style="background:#34495e;" onclick="calcIn('3')">3</button>
+                <button style="background:#34495e; grid-column: span 3;" onclick="calcIn('0')">0</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="history-card">
+        <h3>📊 Recent Bill History</h3>
+        <input type="text" id="searchHistory" onkeyup="filterHistory()" class="search-bar" placeholder="🔍 Search Inv #, Name or Date...">
+        <table class="bill-table">
+            <thead><tr><th>Inv #</th><th>Date & Time</th><th>Customer</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="historyBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="print-area">
+    <center>
+        <h2 style="margin-bottom:5px;">1 MG TRADER</h2>
+        <p style="margin:0;">Main Market Road, Lahore</p>
+        <p style="margin:0;">Contact: 03XXXXXXXXX</p>
+        <hr>
+    </center>
+    <div id="pr-header"></div>
+    <table style="width:100%; border-bottom:1px solid #000; margin-top:10px;">
+        <thead><tr style="text-align:left;"><th>Item</th><th>Price</th><th>Qty</th><th>Total</th></tr></thead>
+        <tbody id="pr-items"></tbody>
+    </table>
+    <h3 style="text-align:right;">Grand Total: Rs. <span id="pr-total"></span></h3>
+    <hr>
+    <center>
+        <p id="pr-status-text" style="font-weight:bold; font-size:14px;"></p>
+        <div id="pr-qr" style="margin:10px 0;"></div>
+        <p>Software by 1 MG Trader</p>
+    </center>
+</div>
+
+<script>
+    let currentItems = [];
+    let editingBillId = null;
+    let sales = JSON.parse(localStorage.getItem('mg_sales')) || [];
+    let stock = JSON.parse(localStorage.getItem('mg_final_products')) || [];
+
+    function init() {
+        let now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('billDateTime').value = now.toISOString().slice(0,16);
+        
+        document.getElementById('billNo').value = "INV-" + (sales.length + 1001);
+        populateStockList();
+        renderHistory();
+    }
+
+    function populateStockList() {
+        let list = document.getElementById('stockList');
+        list.innerHTML = "";
+        stock.forEach(p => {
+            let opt = document.createElement('option');
+            opt.value = p.name;
+            opt.label = "Rs." + p.sale;
+            list.appendChild(opt);
+        });
+    }
+
+    function checkPrice() {
+        let item = stock.find(p => p.name === document.getElementById('itemInput').value);
+        if(item) document.getElementById('itemPrice').value = item.sale;
+    }
+
+    function addItem() {
+        let name = document.getElementById('itemInput').value;
+        let pr = parseFloat(document.getElementById('itemPrice').value) || 0;
+        let qt = parseFloat(document.getElementById('itemQty').value) || 0;
+        if(name && qt > 0) {
+            currentItems.push({ name, pr, qt, total: (pr * qt) });
+            updateTable();
+            document.getElementById('itemInput').value = "";
+            document.getElementById('itemQty').value = "";
+        }
+    }
+
+    function updateTable() {
+        let body = document.getElementById('billItems');
+        body.innerHTML = "";
+        let gt = 0;
+        currentItems.forEach((it, i) => {
+            gt += it.total;
+            body.innerHTML += `<tr><td>${it.name}</td><td>${it.pr}</td><td>${it.qt}</td><td>${it.total}</td><td><button onclick="currentItems.splice(${i},1);updateTable()">✖</button></td></tr>`;
+        });
+        document.getElementById('grandTotal').innerText = gt;
+    }
+
+    function saveAndPrint(status) {
+        if(currentItems.length === 0) return alert("Items add karein!");
+        
+        let billData = {
+            id: document.getElementById('billNo').value,
+            date: document.getElementById('billDateTime').value.replace('T', ' '),
+            cust: document.getElementById('custName').value || "Guest",
+            phone: document.getElementById('custPhone').value || "N/A",
+            area: document.getElementById('custArea').value || "N/A",
+            total: document.getElementById('grandTotal').innerText,
+            status: status,
+            items: [...currentItems]
+        };
+
+        if(editingBillId) {
+            sales = sales.filter(s => s.id !== editingBillId);
+            editingBillId = null;
+        }
+
+        sales.unshift(billData);
+        localStorage.setItem('mg_sales', JSON.stringify(sales));
+        printBillNow(billData);
+    }
+
+    function printBillNow(billData) {
+        document.getElementById('pr-header').innerHTML = `
+            <b>Date:</b> ${billData.date}<br>
+            <b>Inv #:</b> ${billData.id}<br>
+            <b>Cust:</b> ${billData.cust}<br>
+            <b>Area:</b> ${billData.area}
+        `;
+        
+        let prBody = document.getElementById('pr-items');
+        prBody.innerHTML = "";
+        billData.items.forEach(i => {
+            prBody.innerHTML += `<tr><td>${i.name}</td><td>${i.pr}</td><td>${i.qt}</td><td>${i.total}</td></tr>`;
+        });
+        
+        document.getElementById('pr-total').innerText = billData.total;
+        document.getElementById('pr-status-text').innerText = "*** STATUS: " + billData.status.toUpperCase() + " ***";
+
+        document.getElementById('pr-qr').innerHTML = "";
+        new QRCode(document.getElementById('pr-qr'), { text: billData.id, width: 90, height: 90 });
+
+        setTimeout(() => { window.print(); location.reload(); }, 500);
+    }
+
+    function renderHistory() {
+        let body = document.getElementById('historyBody');
+        body.innerHTML = "";
+        sales.forEach(s => {
+            body.innerHTML += `<tr>
+                <td>${s.id}</td>
+                <td>${s.date}</td>
+                <td>${s.cust}</td>
+                <td>Rs. ${s.total}</td>
+                <td style="color:${s.status==='Paid'?'green':'orange'}; font-weight:bold;">${s.status}</td>
+                <td>
+                    <button class="btn-h-edit" onclick="editBill('${s.id}')">✏️</button>
+                    <button class="btn-h-view" onclick="viewBill('${s.id}')">🖨️</button>
+                    <button class="btn-h-del" onclick="deleteBill('${s.id}')">🗑️</button>
+                </td>
+            </tr>`;
+        });
+    }
+
+    function editBill(id) {
+        let bill = sales.find(s => s.id === id);
+        if(!bill) return;
+        editingBillId = id;
+        document.getElementById('modeTitle').innerText = "✏️ Editing: " + id;
+        document.getElementById('billNo').value = id;
+        document.getElementById('custName').value = bill.cust;
+        document.getElementById('custPhone').value = bill.phone;
+        document.getElementById('custArea').value = bill.area;
+        currentItems = [...bill.items];
+        updateTable();
+        window.scrollTo(0,0);
+    }
+
+    function viewBill(id) {
+        let bill = sales.find(s => s.id === id);
+        if(bill) printBillNow(bill);
+    }
+
+    function deleteBill(id) {
+        if(confirm("Delete this bill?")) {
+            sales = sales.filter(s => s.id !== id);
+            localStorage.setItem('mg_sales', JSON.stringify(sales));
+            renderHistory();
+        }
+    }
+
+    function filterHistory() {
+        let val = document.getElementById('searchHistory').value.toUpperCase();
+        let rows = document.getElementById('historyBody').getElementsByTagName('tr');
+        for (let i = 0; i < rows.length; i++) {
+            rows[i].style.display = rows[i].innerText.toUpperCase().includes(val) ? "" : "none";
+        }
+    }
+
+    function calcIn(v) { document.getElementById('calc-display').value += v; }
+    function calcC() { document.getElementById('calc-display').value = ""; }
+    function calcRes() { try { document.getElementById('calc-display').value = eval(document.getElementById('calc-display').value); } catch(e) { alert("Error"); } }
+
+    init();
+</script>
+   <footer style="position: fixed; bottom: 0; left: 0; width: 100%; background: #2c3e50; color: white; padding: 10px 0; overflow: hidden; z-index: 100;">
+    <div class="ticker-text" style="display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite;">
+        Offline Local System | 1 MG Trader | Managed by Management System | All Rights Reserved 2024-25
+    </div>
+</footer>
+
+<style>
+@keyframes marquee {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+}
+</style>
+
+</body>
+</html>

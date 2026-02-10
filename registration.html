@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1 MG Trader | Detailed Registration</title>
+    <style>
+        body { 
+            background: radial-gradient(circle at center, #2c3e50 0%, #000000 100%); 
+            display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh; margin: 0; font-family: 'Segoe UI', sans-serif; color: white;
+            padding-bottom: 60px; /* Footer ke liye space */
+        }
+        .reg-box {
+            width: 450px; background: rgba(255, 255, 255, 0.05);
+            padding: 30px; border-radius: 20px;
+            backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            margin-top: 20px;
+        }
+        h2 { text-align: center; color: #3498db; letter-spacing: 2px; margin: 0 0 5px 0; }
+        p.subtitle { text-align: center; font-size: 12px; color: #bdc3c7; margin-bottom: 25px; }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .full-width { grid-column: span 2; }
+
+        label { display: block; font-size: 11px; color: #3498db; margin-bottom: 5px; font-weight: bold; }
+
+        input, select, textarea {
+            width: 100%; padding: 10px; margin-bottom: 5px;
+            background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px; color: white; outline: none; box-sizing: border-box;
+            font-size: 14px;
+        }
+        textarea { height: 60px; resize: none; }
+        option { color: black; }
+        
+        .reg-btn {
+            width: 100%; padding: 15px; background: #3498db; border: none;
+            border-radius: 8px; color: white; font-weight: bold; cursor: pointer;
+            transition: 0.3s; margin-top: 15px; font-size: 16px;
+        }
+        .reg-btn:hover { background: #2980b9; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4); }
+        
+        .back-link { text-align: center; margin-top: 15px; font-size: 13px; color: #bdc3c7; cursor: pointer; text-decoration: underline; }
+
+        /* Footer & Marquee */
+        footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #2c3e50; color: white; padding: 10px 0; overflow: hidden; z-index: 100; border-top: 1px solid #34495e; }
+        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+    </style>
+</head>
+<body>
+
+<div class="reg-box">
+    <h2>CREAT ACCOUNT</h2>
+    <p class="subtitle">ENTER DETAILS FOR SECURITY VERIFICATION</p>
+
+    <div class="form-grid">
+        <div class="full-width">
+            <label>FULL NAME</label>
+            <input type="text" id="regName" placeholder="John Doe">
+        </div>
+        
+        <div>
+            <label>MOBILE NUMBER</label>
+            <input type="text" id="regPhone" placeholder="03xxxxxxxxx">
+        </div>
+        
+        <div>
+            <label>EMAIL (OPTIONAL)</label>
+            <input type="email" id="regEmail" placeholder="abc@mail.com">
+        </div>
+
+        <div class="full-width">
+            <label>HOME / SHOP ADDRESS</label>
+            <textarea id="regAddress" placeholder="Street, Area, City..."></textarea>
+        </div>
+
+        <div>
+            <label>CHOOSE ACCESS ID</label>
+            <input type="text" id="regId" placeholder="e.g. malik001">
+        </div>
+        
+        <div>
+            <label>CHOOSE PASSWORD</label>
+            <input type="password" id="regPass" placeholder="******">
+        </div>
+
+        <div class="full-width">
+            <label>SYSTEM ROLE (APPLY AS)</label>
+            <select id="regRole">
+                <option value="Seller">Seller (Sales Team)</option>
+                <option value="Order Booker">Order Booker (Booking Team)</option>
+                <option value="Customer">Customer (View Only)</option>
+                <option value="Admin">Admin (Full Control)</option>
+            </select>
+        </div>
+    </div>
+
+    <button class="reg-btn" onclick="sendRequest()">🚀 SUBMIT REGISTRATION</button>
+    <div class="back-link" onclick="window.location.href='login.html'">Already have an account? Login here</div>
+</div>
+
+<footer style="position: fixed; bottom: 0; left: 0; width: 100%; background: #2c3e50; color: white; padding: 10px 0; overflow: hidden; z-index: 100;">
+    <div class="ticker-text" style="display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite;">
+        Offline Local System | 1 MG Trader | Managed by Management System | All Rights Reserved 2024-25
+    </div>
+</footer>
+
+<script>
+    function sendRequest() {
+        // Inputs uthana
+        let name = document.getElementById('regName').value.trim();
+        let phone = document.getElementById('regPhone').value.trim();
+        let email = document.getElementById('regEmail').value.trim();
+        let address = document.getElementById('regAddress').value.trim();
+        let id = document.getElementById('regId').value.trim();
+        let pass = document.getElementById('regPass').value.trim();
+        let role = document.getElementById('regRole').value;
+
+        // Validation
+        if(!name || !id || !pass || !phone) {
+            alert("Name, Phone, ID aur Password likhna lazmi hai!");
+            return;
+        }
+
+        let pending = JSON.parse(localStorage.getItem('pendingUsers')) || [];
+        
+        // Data mehfooz karna
+        pending.push({
+            name: name,
+            phone: phone,
+            email: email,
+            address: address,
+            id: id,
+            pass: pass,
+            type: role,
+            status: "Pending",
+            time: new Date().toLocaleString()
+        });
+
+        localStorage.setItem('pendingUsers', JSON.stringify(pending));
+        
+        alert("✅ Request sent! Admin aapki details verify karke account activate karega.");
+        window.location.href = 'login.html';
+    }
+</script>
+
+        <footer style="position: fixed; bottom: 0; left: 0; width: 100%; background: #2c3e50; color: white; padding: 10px 0; overflow: hidden; z-index: 100;">
+    <div class="ticker-text" style="display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite;">
+        Offline Local System | 1 MG Trader | Managed by Management System | All Rights Reserved 2024-25
+    </div>
+</footer>
+
+<style>
+@keyframes marquee {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+}
+</body>
+
+</html>

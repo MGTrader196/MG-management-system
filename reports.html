@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>1 MG Trader | Business Reports</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding-bottom: 100px; }
+        .report-layout { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+        
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+        .stat-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; position: relative; overflow: hidden; }
+        .stat-card h3 { margin: 0; font-size: 14px; color: #7f8c8d; text-transform: uppercase; }
+        .stat-card h2 { margin: 10px 0; font-size: 28px; color: #2c3e50; }
+        .stat-card.sale { border-top: 5px solid #27ae60; }
+        .stat-card.expense { border-top: 5px solid #e74c3c; }
+        .stat-card.profit { border-top: 5px solid #f1c40f; }
+
+        /* Charts Section */
+        .charts-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; }
+        .chart-box { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); height: 350px; }
+
+        .btn-refresh { background: #2c3e50; color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }
+        .btn-home { background: #7f8c8d; color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-block; }
+
+        /* Footer Ticker */
+        .footer-ticker { position: fixed; bottom: 0; left: 0; width: 100%; background: #2c3e50; color: white; padding: 10px 0; overflow: hidden; z-index: 1000; }
+        .ticker-wrap { display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite; font-weight: bold; }
+        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+    </style>
+</head>
+<body>
+      <header class="main-header no-print" style="background: #2c3e50; color: white; padding: 15px; text-align: center;">
+    <h2 style="margin: 0;">📦 1 MG TRADER</h2>
+    <nav style="margin-top: 10px;">
+        <a href="index.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">🏠 Dashboard</a>
+        <a href="sales.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">🛒 Sales</a>
+        <a href="products.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">📦 Inventory</a>
+        <a href="workers.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">👥 Workers</a>
+        <a href="reports.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">📊 Reports</a>
+    </nav>
+</header>
+<header style="background: #2c3e50; color: white; padding: 15px; text-align: center; font-size: 22px; font-weight: bold;">
+    📊 Business Intelligence Reports | 1 MG Trader
+</header>
+
+<div class="report-layout">
+    <div>
+        <button class="btn-refresh" onclick="loadReports()">🔄 Update Reports</button>
+        <a href="index.html" class="btn-home">🏠 Back to Home</a>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card sale">
+            <h3>Total Sales</h3>
+            <h2 id="totalSales">Rs. 0</h2>
+        </div>
+        <div class="stat-card expense">
+            <h3>Total Expenses</h3>
+            <h2 id="totalExpenses">Rs. 0</h2>
+        </div>
+        <div class="stat-card profit">
+            <h3>Net Profit / Loss</h3>
+            <h2 id="netProfit">Rs. 0</h2>
+        </div>
+    </div>
+
+    <div class="charts-container">
+        <div class="chart-box">
+            <h4 style="text-align: center;">Sales vs Expenses (Monthly)</h4>
+            <canvas id="mainChart"></canvas>
+        </div>
+        <div class="chart-box">
+            <h4 style="text-align: center;">Expense Breakdown</h4>
+            <canvas id="expensePieChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="footer-ticker">
+    <div class="ticker-wrap">Business Performance Report | 1 MG Trader | Track Your Growth Daily | All Data is Secured Locally</div>
+</div>
+
+<script>
+    function loadReports() {
+        // Data fetch karna (localStorage se)
+        let salesData = JSON.parse(localStorage.getItem('mg_sales_history')) || [];
+        let expenseData = JSON.parse(localStorage.getItem('mg_expenses')) || [];
+
+        // 1. Total Sales Calculation
+        let totalS = salesData.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
+        
+        // 2. Total Expense Calculation
+        let totalE = expenseData.reduce((sum, item) => sum + (parseFloat(item.amt) || 0), 0);
+
+        // 3. Net Profit
+        let profit = totalS - totalE;
+
+        // UI Update
+        document.getElementById('totalSales').innerText = "Rs. " + totalS.toLocaleString();
+        document.getElementById('totalExpenses').innerText = "Rs. " + totalE.toLocaleString();
+        document.getElementById('netProfit').innerText = "Rs. " + profit.toLocaleString();
+        document.getElementById('netProfit').style.color = profit >= 0 ? "#27ae60" : "#e74c3c";
+
+        renderCharts(totalS, totalE, expenseData);
+    }
+
+    let myChart, myPieChart; // Chart instances
+
+    function renderCharts(s, e, expenseDetails) {
+        // Destroy old charts if exist
+        if(myChart) myChart.destroy();
+        if(myPieChart) myPieChart.destroy();
+
+        // Bar Chart (Sales vs Expenses)
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Sales', 'Expenses'],
+                datasets: [{
+                    label: 'Amount in Rs.',
+                    data: [s, e],
+                    backgroundColor: ['#27ae60', '#e74c3c'],
+                    borderRadius: 10
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        // Pie Chart (Expenses by Category)
+        const pieCtx = document.getElementById('expensePieChart').getContext('2d');
+        
+        // Group expenses by category
+        let cats = {};
+        expenseDetails.forEach(ex => {
+            cats[ex.cat] = (cats[ex.cat] || 0) + parseFloat(ex.amt);
+        });
+
+        myPieChart = new Chart(pieCtx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(cats),
+                datasets: [{
+                    data: Object.values(cats),
+                    backgroundColor: ['#3498db', '#e67e22', '#9b59b6', '#f1c40f', '#1abc9c']
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+
+    // Initial Load
+    window.onload = loadReports;
+</script>
+
+</body>
+</html>

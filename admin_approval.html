@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Control Panel | 1 MG Trader</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; display: block; }
+        .admin-header { background: #2c3e50; color: white; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .nav-bar { background: #34495e; padding: 10px; text-align: center; }
+        .nav-bar a { color: white; text-decoration: none; margin: 0 15px; font-weight: bold; font-size: 14px; }
+        .container { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
+        .tab-wrapper { display: flex; background: #ddd; border-radius: 8px 8px 0 0; overflow: hidden; }
+        .tab-btn { flex: 1; padding: 15px; border: none; cursor: pointer; font-weight: bold; background: #ddd; transition: 0.3s; position: relative; }
+        .tab-btn.active { background: white; color: #2c3e50; border-top: 3px solid #2c3e50; }
+        .content-card { background: white; padding: 25px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); min-height: 450px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { background: #f8f9fa; padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6; color: #333; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
+        
+        .btn { padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 11px; margin-right: 2px; }
+        .btn-ok { background: #27ae60; color: white; }
+        .btn-no { background: #f39c12; color: white; }
+        .btn-del { background: #e74c3c; color: white; }
+        
+        .pass-form { max-width: 450px; margin-top: 10px; background: #f9f9f9; padding: 20px; border-radius: 10px; }
+        .pass-form label { display: block; font-size: 12px; font-weight: bold; color: #555; margin-bottom: 5px; }
+        .pass-form input { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+        .active-status { background: #d4edda; color: #155724; }
+        .inactive-status { background: #f8d7da; color: #721c24; }
+        
+        .alert-box { background: #fff; border-left: 5px solid #e74c3c; padding: 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .req-box { background: #eef7ff; border-left: 5px solid #3498db; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
+        .badge-count { background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; position: absolute; top: 5px; right: 5px; }
+    </style>
+</head>
+<body onload="loadAllData()">
+
+<div class="admin-header">
+    <h1>🛠️ ADMIN CONTROL PANEL</h1>
+    <p>1 MG Trader - Security & User Management</p>
+</div>
+
+<nav class="nav-bar">
+    <a href="index.html">🏠 Dashboard</a>
+    <a href="products.html">📦 Inventory</a>
+    <a href="orders.html">📝 Orders</a>
+</nav>
+
+<div class="container">
+    <div class="tab-wrapper">
+        <button class="tab-btn active" onclick="openTab('orders')">📦 Orders</button>
+        <button class="tab-btn" onclick="openTab('workers')">👥 Workers</button>
+        <button class="tab-btn" onclick="openTab('requests')" id="reqBtn">📩 Requests</button>
+        <button class="tab-btn" onclick="openTab('alerts')" id="alertBtn">⚠️ Alerts</button>
+        <button class="tab-btn" onclick="openTab('security')">🔒 Passwords</button>
+    </div>
+
+    <div class="content-card">
+        <div id="orders" class="tab-content active">
+            <h3>Pending Orders Approval</h3>
+            <table>
+                <thead><tr><th>Shop</th><th>Amount</th><th>Action</th></tr></thead>
+                <tbody id="orderBody"></tbody>
+            </table>
+        </div>
+
+        <div id="workers" class="tab-content">
+            <h3>Manage Worker Status</h3>
+            <table>
+                <thead><tr><th>Worker Details</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="workerTableBody"></tbody>
+            </table>
+        </div>
+
+        <div id="requests" class="tab-content">
+            <h3>New User Registration Requests</h3>
+            <div id="requestSection"></div>
+        </div>
+
+        <div id="alerts" class="tab-content">
+            <h3>System Security Logs</h3>
+            <div id="alertSection"></div>
+        </div>
+
+        <div id="security" class="tab-content">
+    <h3>🔒 System Access Passwords</h3>
+    <div class="pass-form">
+        <label>Admin Panel Login Password</label>
+        <div style="position: relative; display: flex; align-items: center;">
+            <input type="password" id="adminPassNew" placeholder="Enter New Admin Password" style="flex: 1;">
+            <button type="button" onclick="togglePass('adminPassNew')" style="margin-left: -40px; background: none; border: none; cursor: pointer; font-size: 18px; margin-bottom: 15px;">👁️</button>
+        </div>
+        
+        <label>Edit/Delete Password (Inventory & Workers)</label>
+        <div style="position: relative; display: flex; align-items: center;">
+            <input type="password" id="editPassNew" placeholder="Enter New Edit Password" style="flex: 1;">
+            <button type="button" onclick="togglePass('editPassNew')" style="margin-left: -40px; background: none; border: none; cursor: pointer; font-size: 18px; margin-bottom: 15px;">👁️</button>
+        </div>
+
+        <label>New Registration Key (For Workers)</label>
+        <div style="position: relative; display: flex; align-items: center;">
+            <input type="password" id="regKeyNew" placeholder="Enter New Registration Key" style="flex: 1;">
+            <button type="button" onclick="togglePass('regKeyNew')" style="margin-left: -40px; background: none; border: none; cursor: pointer; font-size: 18px; margin-bottom: 15px;">👁️</button>
+        </div>
+        
+        <button class="btn btn-ok" style="width: 100%; padding: 12px; margin-top: 10px;" onclick="updateAllPasswords()">💾 Save All Passwords</button>
+    </div>
+</div>
+
+<script>
+    // Password dikhane aur chhupane ka function
+    function togglePass(inputId) {
+        let input = document.getElementById(inputId);
+        if (input.type === "password") {
+            input.type = "text";
+        } else {
+            input.type = "password";
+        }
+    }
+
+    // Baki purane functions (updateAllPasswords, loadAllData, etc.) wese hi rahen ge
+</script>
+    </div>
+</div>
+
+<script>
+    function openTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    function loadAllData() {
+        renderOrders();
+        renderWorkerControl();
+        renderAlerts();
+        renderRequests();
+        
+        // Passwords Load
+        document.getElementById('adminPassNew').value = localStorage.getItem('mg_admin_pass') || 'Malik12345';
+        document.getElementById('editPassNew').value = localStorage.getItem('mg_edit_pass') || '123456789';
+        document.getElementById('regKeyNew').value = localStorage.getItem('mg_reg_key') || 'MG-JOIN';
+    }
+
+    // --- Password Management ---
+    function updateAllPasswords() {
+        let adminP = document.getElementById('adminPassNew').value.trim();
+        let editP = document.getElementById('editPassNew').value.trim();
+        let regK = document.getElementById('regKeyNew').value.trim();
+        
+        if(adminP.length < 4 || editP.length < 4) return alert("Passwords must be at least 4 characters!");
+
+        localStorage.setItem('mg_admin_pass', adminP);
+        localStorage.setItem('mg_edit_pass', editP);
+        localStorage.setItem('mg_reg_key', regK);
+        alert("✅ All security passwords updated!");
+    }
+
+    // --- New Requests Management ---
+    function renderRequests() {
+        let pending = JSON.parse(localStorage.getItem('pendingUsers')) || [];
+        let html = pending.map((u, index) => `
+            <div class="req-box">
+                <b>👤 ${u.name}</b> | ID Suggestion: ${u.workerId || 'Auto'}<br>
+                <small>Designation: ${u.role} | Phone: ${u.phone}</small><br>
+                <div style="margin-top:10px;">
+                    <button class="btn btn-ok" onclick="approveUser(${index})">✅ Approve</button>
+                    <button class="btn btn-del" onclick="rejectUser(${index})">❌ Reject</button>
+                </div>
+            </div>
+        `).join('');
+        document.getElementById('requestSection').innerHTML = html || "No pending registration requests.";
+        if(pending.length > 0) document.getElementById('reqBtn').innerHTML += `<span class="badge-count">${pending.length}</span>`;
+    }
+
+    function approveUser(idx) {
+        let pending = JSON.parse(localStorage.getItem('pendingUsers')) || [];
+        let workers = JSON.parse(localStorage.getItem('mg_final_workers')) || [];
+        
+        let newUser = pending[idx];
+        newUser.status = 'Active';
+        newUser.workerId = "MG-" + Math.floor(100 + Math.random() * 900); // Assign ID
+        
+        workers.push(newUser);
+        localStorage.setItem('mg_final_workers', JSON.stringify(workers));
+        
+        pending.splice(idx, 1);
+        localStorage.setItem('pendingUsers', JSON.stringify(pending));
+        
+        alert("Worker Approved! ID Assigned: " + newUser.workerId);
+        loadAllData();
+    }
+
+    function rejectUser(idx) {
+        if(confirm("Reject this request?")) {
+            let pending = JSON.parse(localStorage.getItem('pendingUsers')) || [];
+            pending.splice(idx, 1);
+            localStorage.setItem('pendingUsers', JSON.stringify(pending));
+            loadAllData();
+        }
+    }
+
+    // --- Worker Control ---
+    function renderWorkerControl() {
+        let workers = JSON.parse(localStorage.getItem('mg_final_workers')) || [];
+        let html = workers.map((w, index) => `
+            <tr>
+                <td><b>${w.name}</b><br><small>ID: ${w.workerId}</small></td>
+                <td>${w.role}</td>
+                <td><span class="status-badge ${w.status === 'Inactive' ? 'inactive-status' : 'active-status'}">${w.status || 'Active'}</span></td>
+                <td>
+                    <button class="btn btn-ok" onclick="setWorkerStatus(${index}, 'Active')">Active</button>
+                    <button class="btn btn-no" onclick="setWorkerStatus(${index}, 'Inactive')">Inactive</button>
+                    <button class="btn btn-del" onclick="deleteWorker(${index})">Del</button>
+                </td>
+            </tr>
+        `).join('');
+        document.getElementById('workerTableBody').innerHTML = html || "<tr><td colspan='4'>No workers in database.</td></tr>";
+    }
+
+    function setWorkerStatus(index, status) {
+        let workers = JSON.parse(localStorage.getItem('mg_final_workers')) || [];
+        workers[index].status = status;
+        localStorage.setItem('mg_final_workers', JSON.stringify(workers));
+        renderWorkerControl();
+    }
+
+    function deleteWorker(index) {
+        if(confirm("Permanently delete this worker?")) {
+            let workers = JSON.parse(localStorage.getItem('mg_final_workers')) || [];
+            workers.splice(index, 1);
+            localStorage.setItem('mg_final_workers', JSON.stringify(workers));
+            renderWorkerControl();
+        }
+    }
+
+    // --- Orders & Alerts ---
+    function renderOrders() {
+        let orders = JSON.parse(localStorage.getItem('mg_orders')) || [];
+        let html = orders.filter(o => o.status === 'Pending').map(ord => `
+            <tr>
+                <td><b>${ord.shop}</b><br><small>${ord.time}</small></td>
+                <td>Rs. ${ord.total}</td>
+                <td><button class="btn btn-ok" onclick="approveOrder(${ord.id})">Delivered</button></td>
+            </tr>
+        `).join('');
+        document.getElementById('orderBody').innerHTML = html || "<tr><td colspan='3'>No pending orders.</td></tr>";
+    }
+
+    function approveOrder(id) {
+        let orders = JSON.parse(localStorage.getItem('mg_orders')) || [];
+        let idx = orders.findIndex(o => o.id == id);
+        if(idx != -1) {
+            orders[idx].status = 'Delivered';
+            localStorage.setItem('mg_orders', JSON.stringify(orders));
+            renderOrders();
+        }
+    }
+
+    function renderAlerts() {
+        let alerts = JSON.parse(localStorage.getItem('admin_alerts')) || [];
+        let html = alerts.map(a => `
+            <div class="alert-box" style="border-left-color: ${a.msg.includes('Wrong') ? '#e74c3c' : '#f39c12'}">
+                <small>${a.time}</small><br><strong>⚠️ LOG:</strong> ${a.msg}
+            </div>
+        `).reverse().join('');
+        document.getElementById('alertSection').innerHTML = html || "No security logs found.";
+        if(alerts.length > 0) document.getElementById('alertBtn').innerHTML += `<span class="badge-count">${alerts.length}</span>`;
+    }
+</script>
+</body>
+</html>

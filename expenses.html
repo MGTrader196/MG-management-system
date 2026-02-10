@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>1 MG Trader | Daily Expenses</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; }
+        .expense-layout { display: flex; padding: 20px; gap: 20px; margin-bottom: 80px; }
+        .expense-card { flex: 1; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); height: fit-content; }
+        .expense-list { flex: 2; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #34495e; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn-add { width: 100%; background: #e67e22; color: white; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        .ex-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .ex-table th { background: #f8f9fa; color: #7f8c8d; text-align: left; padding: 12px; border-bottom: 2px solid #eee; }
+        .ex-table td { padding: 12px; border-bottom: 1px solid #eee; }
+        .total-box { background: #2c3e50; color: white; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px; }
+        footer { position: fixed; bottom: 0; width: 100%; background: #2c3e50; color: white; padding: 10px 0; text-align: center; }
+        .time-text { font-size: 11px; color: #95a5a6; display: block; }
+    </style>
+</head>
+<body>
+
+<header style="background: #2c3e50; color: white; padding: 15px; text-align: center; font-size: 22px; font-weight: bold;">
+    💸 Daily Expense Tracker | 1 MG Trader
+</header>
+           <header class="main-header no-print" style="background: #2c3e50; color: white; padding: 15px; text-align: center;">
+    <h2 style="margin: 0;">📦 1 MG TRADER</h2>
+    <nav style="margin-top: 10px;">
+        <a href="index.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">🏠 Dashboard</a>
+        <a href="sales.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">🛒 Sales</a>
+        <a href="products.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">📦 Inventory</a>
+        <a href="workers.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">👥 Workers</a>
+        <a href="reports.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">📊 Reports</a>
+    </nav>
+</header>
+<div class="expense-layout">
+    <div class="expense-card">
+        <h3>➕ Add New Expense</h3>
+        <div class="form-group">
+            <label>Category</label>
+            <select id="exCat">
+                <option value="Food">🍱 Food / Tea</option>
+                <option value="Bill">⚡ Utility Bills</option>
+                <option value="Rent">🏠 Rent</option>
+                <option value="Salary">💰 Staff Salary</option>
+                <option value="Other">🛠️ Others</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <input type="text" id="exDesc" placeholder="Kharchay ki tafseel">
+        </div>
+        <div class="form-group">
+            <label>Amount (Rs.)</label>
+            <input type="number" id="exAmount" placeholder="0.00">
+        </div>
+        <button class="btn-add" onclick="addExpense()">Save Expense</button>
+        <button onclick="location.href='index.html'" style="width:100%; margin-top:10px; padding:10px; background:none; border:1px solid #ccc; border-radius:8px; cursor:pointer;">⬅ Back</button>
+    </div>
+
+    <div class="expense-list">
+        <div class="total-box">
+            <span>Current Month Total</span>
+            <h2 id="totalDisplay">Rs. 0</h2>
+        </div>
+        
+        <h3>📊 Transaction History</h3>
+        <table class="ex-table">
+            <thead>
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="exBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let expenses = JSON.parse(localStorage.getItem('mg_expenses')) || [];
+
+    function addExpense() {
+        let cat = document.getElementById('exCat').value;
+        let desc = document.getElementById('exDesc').value;
+        let amt = parseFloat(document.getElementById('exAmount').value);
+        
+        // Date aur Time create karna
+        let now = new Date();
+        let dateStr = now.toLocaleDateString(); // Example: 24/01/2026
+        let timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); // Example: 02:30 PM
+
+        if(desc && amt > 0) {
+            expenses.push({ 
+                date: dateStr, 
+                time: timeStr, 
+                cat, 
+                desc, 
+                amt, 
+                id: Date.now() 
+            });
+            localStorage.setItem('mg_expenses', JSON.stringify(expenses));
+            renderExpenses();
+            document.getElementById('exDesc').value = '';
+            document.getElementById('exAmount').value = '';
+        } else {
+            alert("Poori maloomat darj karein!");
+        }
+    }
+
+    function renderExpenses() {
+        let body = document.getElementById('exBody');
+        body.innerHTML = "";
+        let total = 0;
+
+        // Newest entries top par dikhane ke liye
+        let displayList = [...expenses].reverse();
+
+        displayList.forEach(ex => {
+            total += ex.amt;
+            body.innerHTML += `
+                <tr>
+                    <td>
+                        <strong>${ex.date}</strong>
+                        <span class="time-text">🕒 ${ex.time}</span>
+                    </td>
+                    <td>${ex.cat}</td>
+                    <td>${ex.desc}</td>
+                    <td style="font-weight:bold;">Rs. ${ex.amt}</td>
+                    <td><button onclick="deleteEx(${ex.id})" style="border:none; background:none; color:red; cursor:pointer;">🗑️</button></td>
+                </tr>
+            `;
+        });
+        document.getElementById('totalDisplay').innerText = "Rs. " + total;
+    }
+
+    function deleteEx(id) {
+        if(confirm("Delete karna chahte hain?")) {
+            expenses = expenses.filter(e => e.id !== id);
+            localStorage.setItem('mg_expenses', JSON.stringify(expenses));
+            renderExpenses();
+        }
+    }
+
+    renderExpenses();
+</script>
+    <footer style="position: fixed; bottom: 0; left: 0; width: 100%; background: #2c3e50; color: white; padding: 10px 0; overflow: hidden; z-index: 100;">
+    <div class="ticker-text" style="display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite;">
+        Offline Local System | 1 MG Trader | Managed by Management System | All Rights Reserved 2024-25
+    </div>
+</footer>
+
+<style>
+@keyframes marquee {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+}
+</style>
+
+</body>
+</html>
