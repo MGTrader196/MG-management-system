@@ -50,20 +50,20 @@
             font-size: 13px; transition: 0.3s;
         }
 
-        /* 📸 Unique Photo Upload Style */
+        /* 📸 Unique Photo Upload Section */
         .photo-area {
             background: rgba(0, 210, 255, 0.05);
             border: 2px dashed rgba(0, 210, 255, 0.4);
             padding: 15px; border-radius: 12px;
             text-align: center; transition: 0.3s;
-            position: relative;
+            position: relative; margin-top: 10px;
         }
         .photo-area:hover { border-color: #00d2ff; background: rgba(0, 210, 255, 0.1); }
         .photo-area input[type="file"] { position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; }
         .photo-label { font-size: 13px; color: #00d2ff; font-weight: bold; display: block; cursor: pointer; }
         .photo-sub { font-size: 10px; color: #bdc3c7; }
 
-        /* 👁️ Password Wrapper Fix */
+        /* 👁️ Password Wrapper */
         .pass-container { position: relative; display: flex; align-items: center; }
         .eye-icon {
             position: absolute; right: 12px; cursor: pointer;
@@ -80,6 +80,15 @@
             transition: 0.4s; margin-top: 10px;
         }
         .reg-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(0, 210, 255, 0.6); }
+
+        .back-box {
+            margin-top: 20px; padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px dashed rgba(52, 152, 219, 0.5);
+            border-radius: 12px; text-align: center; cursor: pointer;
+        }
+        .back-link { color: #bdc3c7; font-size: 14px; }
+        .back-link span { color: #00d2ff; font-weight: bold; text-decoration: underline; }
 
         footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #2c3e50; color: white; padding: 12px 0; overflow: hidden; z-index: 100; border-top: 2px solid #3498db; }
         @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
@@ -154,6 +163,10 @@
             <input type="file" id="regPhoto" accept="image/*">
         </div>
     </div>
+
+    <div class="back-box" onclick="window.location.href='login.html'">
+        <div class="back-link">Already have an account? <span>Login Here 🔒</span></div>
+    </div>
 </div>
 
 <footer>
@@ -178,14 +191,12 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Live Clock
     setInterval(() => {
         const now = new Date();
         document.getElementById('liveClock').innerText = "⌚ TIME: " + now.toLocaleTimeString();
         document.getElementById('liveDate').innerText = "📅 " + now.toLocaleDateString();
     }, 1000);
 
-    // 🔐 Eye Toggle Function
     window.toggleEye = function() {
         const p = document.getElementById('regPass');
         p.type = p.type === "password" ? "text" : "password";
@@ -196,19 +207,22 @@
         const id = document.getElementById('regId').value.trim();
         const pass = document.getElementById('regPass').value.trim();
         const phone = document.getElementById('regPhone').value.trim();
+        const cnic = document.getElementById('regCNIC').value.trim();
+        const dob = document.getElementById('regDOB').value;
+        const address = document.getElementById('regAddress').value.trim();
+        const role = document.getElementById('regRole').value;
 
-        if(!name || !id || !pass || !phone) {
+        if(!name || !id || !pass || !phone || !cnic) {
             alert("Bhai, Details mukammal bharein!");
             return;
         }
 
         try {
             await addDoc(collection(db, "pendingUsers"), {
-                name, id, pass, phone,
-                status: "Pending",
-                time: new Date().toLocaleString()
+                name, id, pass, phone, cnic, dob, address, type: role,
+                status: "Pending", time: new Date().toLocaleString()
             });
-            alert("✅ Request Sent!");
+            alert("✅ Registration Request Sent to Malik!");
             window.location.href = "login.html";
         } catch (e) {
             alert("❌ Connection Error!");
