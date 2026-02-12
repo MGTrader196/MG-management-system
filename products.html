@@ -1,82 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>1 MG Trader | Smart Stock Management (Cloud)</title>
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding-bottom: 60px; }
-        .main-header { background: #2c3e50; color: white; padding: 15px; text-align: center; }
-        .nav-bar { background: #34495e; padding: 10px; text-align: center; }
-        .nav-bar a { color: white; text-decoration: none; margin: 0 15px; font-weight: bold; }
-        .container { padding: 20px; max-width: 1400px; margin: auto; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .grid-5 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
-        label { font-size: 11px; font-weight: bold; color: #3498db; text-transform: uppercase; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin-top: 5px; box-sizing: border-box; }
-        button { cursor: pointer; border: none; font-weight: bold; border-radius: 6px; transition: 0.3s; }
-        .btn-save { background: #27ae60; color: white; width: 100%; padding: 15px; font-size: 16px; margin-top: 15px; }
-        .btn-save:hover { background: #219150; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background: #2c3e50; color: white; }
-        .low-stock { background: #ff7675 !important; color: white; }
-        .ticker { position: fixed; bottom: 0; width: 100%; background: #2c3e50; color: white; padding: 10px; font-weight: bold; }
-    </style>
-</head>
-<body>
-
-<div class="main-header">
-    <h1>1 MG TRADER | STOCK MANAGEMENT</h1>
-</div>
-
-<div class="nav-bar">
-    <a href="index.html">🏠 Dashboard</a>
-    <a href="sales.html">🧾 Sales</a>
-    <a href="customers.html">👤 Customers</a>
-    <a href="expenses.html">💸 Expenses</a>
-</div>
-
-<div class="container">
-    <div class="card">
-        <h3>➕ Add New Stock</h3>
-        <div class="grid-5">
-            <div><label>Product Name</label><input type="text" id="pName" placeholder="Mobile, Charger etc."></div>
-            <div><label>Company</label><input type="text" id="pComp" placeholder="Samsung, Apple"></div>
-            <div><label>Category</label><input type="text" id="pCat" placeholder="Accessories"></div>
-            <div><label>Purchase Price</label><input type="number" id="pCost" placeholder="0"></div>
-            <div><label>Sale Price</label><input type="number" id="pPrice" placeholder="0"></div>
-            <div><label>Current Stock (Qty)</label><input type="number" id="pQty" placeholder="0"></div>
-            <div><label>Min. Alert Level</label><input type="number" id="pMin" value="5"></div>
-            <div><label>Expiry Date</label><input type="date" id="pExp"></div>
-        </div>
-        <button class="btn-save" id="btnSave">🚀 SAVE PRODUCT TO CLOUD</button>
-    </div>
-
-    <div class="card">
-        <input type="text" id="pSearch" onkeyup="searchProduct()" placeholder="🔍 Search Stock by Name or Company..." style="margin-bottom:15px; padding: 12px;">
-        <table>
-            <thead>
-                <tr>
-                    <th>Product Details</th>
-                    <th>Purchase</th>
-                    <th>Sale</th>
-                    <th>Stock</th>
-                    <th>Expiry</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="productBody">
-                </tbody>
-        </table>
-    </div>
-</div>
-
-<div class="ticker" id="tickerText">Connecting to Cloud...</div>
-
-<script type="module">
-    // Firebase Setup
+     <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyD3So-in02rbcWD7OmuiRXzySQYgCR7iVI",
@@ -89,77 +16,273 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const stockCol = collection(db, "products");
+    const stockCol = collection(db, "products"); // Database table ka naam
 
-    // 1. Data Save Karna (Cloud)
-    document.getElementById('btnSave').onclick = async function() {
-        const product = {
-            name: document.getElementById('pName').value.trim(),
-            company: document.getElementById('pComp').value.trim(),
-            category: document.getElementById('pCat').value.trim(),
-            cost: Number(document.getElementById('pCost').value),
-            price: Number(document.getElementById('pPrice').value),
-            qty: Number(document.getElementById('pQty').value),
-            min: Number(document.getElementById('pMin').value),
-            expiry: document.getElementById('pExp').value,
-            time: new Date().toLocaleString()
-        };
-
-        if(!product.name || !product.qty) return alert("Product Name aur Qty lazmi hai!");
-
-        try {
-            await addDoc(stockCol, product);
-            alert("✅ Stock Cloud Par Save Ho Gaya!");
-            document.querySelectorAll('input').forEach(i => i.value = "");
-        } catch (e) {
-            alert("❌ Cloud Error: " + e.message);
-        }
-    };
-
-    // 2. Data Load Karna (Live - Refresh ki zaroorat nahi)
-    onSnapshot(stockCol, (snapshot) => {
-        let html = "";
-        let lowItems = 0;
+    // Baki functions nichay dekhein...
+</script>
+    <meta charset="UTF-8">
+    <title>1 MG Trader | Smart Stock Management</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding-bottom: 60px; }
+        .main-header { background: #2c3e50; color: white; padding: 15px; text-align: center; }
+        .nav-bar { background: #34495e; padding: 10px; text-align: center; }
+        .nav-bar a { color: white; text-decoration: none; margin: 0 15px; font-weight: bold; }
         
-        snapshot.forEach((docSnap) => {
-            const p = docSnap.data();
-            const id = docSnap.id;
-            const isLow = p.qty <= p.min;
-            if(isLow) lowItems++;
+        .container { padding: 20px; max-width: 1400px; margin: auto; }
+        
+        /* Master Buttons Style */
+        .master-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .btn-master { flex: 1; padding: 12px; border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: bold; font-size: 13px; text-transform: uppercase; transition: 0.3s; min-width: 150px; }
+        .btn-comp { background: #8e44ad; }
+        .btn-cat { background: #2980b9; }
+        .btn-sub { background: #16a085; }
+        .btn-del-m { background: #c0392b; }
+        .btn-master:hover { opacity: 0.8; transform: translateY(-2px); }
 
-            html += `
-                <tr class="${isLow ? 'low-stock' : ''}">
-                    <td><b>${p.name}</b><br><small>${p.company} | ${p.category}</small></td>
-                    <td>Rs. ${p.cost}</td>
-                    <td>Rs. ${p.price}</td>
-                    <td><b>${p.qty}</b></td>
-                    <td>${p.expiry || 'No Expiry'}</td>
-                    <td>
-                        <button onclick="deleteMe('${id}')" style="background:#e74c3c; color:white; padding:5px 10px; border-radius:4px;">🗑️</button>
-                    </td>
-                </tr>
-            `;
-        });
-        document.getElementById('productBody').innerHTML = html || '<tr><td colspan="6">No Stock Found in Cloud</td></tr>';
-        document.getElementById('tickerText').innerText = `⚠️ ALERT: ${lowItems} Items Low Stock | Cloud Database Live 🟢`;
-    });
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 15px; }
+        label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 5px; color: #34495e; text-transform: uppercase; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        
+        /* Table Styles with Warnings */
+        .table-res { overflow-x: auto; background: white; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #2c3e50; color: white; padding: 12px; text-align: left; font-size: 13px; }
+        td { padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; }
+        
+        /* Smart Warning Rows */
+        .low-stock { background-color: #ffcccc !important; } /* Red for Low Stock */
+        .expiring-soon { background-color: #fff3cd !important; } /* Yellow for Expiry */
+        .off-season { border-left: 8px solid #3498db; } /* Blue stripe for Seasonal */
 
-    // 3. Delete Function
-    window.deleteMe = async function(id) {
-        if(confirm("Kya aap waqai ye product delete karna chahte hain?")) {
-            await deleteDoc(doc(db, "products", id));
+        .btn-add { background: #27ae60; color: white; padding: 15px 40px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; width: 100%; }
+        .btn-del { background: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; }
+        
+        footer { position: fixed; bottom: 0; width: 100%; background: #2c3e50; color: white; padding: 8px; font-size: 14px; z-index: 1000; }
+        .ticker { display: flex; gap: 50px; white-space: nowrap; animation: move 20s linear infinite; }
+        @keyframes move { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+    </style>
+</head>
+<body onload="init()">
+
+<header class="main-header">
+    <h1>📦 1 MG TRADER | SMART INVENTORY</h1>
+</header>
+
+<nav class="nav-bar">
+    <a href="index.html">🏠 Dashboard</a>
+    <a href="products.html">📦 Inventory</a>
+    <a href="orders.html">📝 Orders</a>
+    <a href="companies.html">🏢 Companies</a>
+</nav>
+
+<div class="container">
+    <div class="master-bar">
+        <button class="btn-master btn-comp" onclick="manageMaster('Company')">🏢 Add Company</button>
+        <button class="btn-master btn-cat" onclick="manageMaster('Category')">📁 Add Category</button>
+        <button class="btn-master btn-sub" onclick="manageMaster('Sub-Category')">📂 Add Sub-Category</button>
+        <button class="btn-master btn-del-m" onclick="deleteMaster()">🗑️ Delete Master List</button>
+    </div>
+
+    <div class="card">
+        <div class="form-grid">
+            <div><label>Inv#</label><input type="text" placeholder="w_123" id="pInv"></div>
+            <div><label>Code</label><input type="text" placeholder="0000" id="pCode"></div>
+            <div><label>Company</label><select id="pComp"></select></div>
+            <div><label>Category</label><select id="pCat"></select></div>
+            <div><label>Sub-Cat</label><select id="pSubCat"></select></div>
+            <div><label>Name</label><input type="text" placeholder="GM Cable" id="pName"></div>
+        </div>
+        <div class="form-grid">
+            <div><label>Cost</label><input type="number" id="pCost" oninput="calcProfit()" value="0"></div>
+            <div><label>Sale</label><input type="number" id="pSale" oninput="calcProfit()" value="0"></div>
+            <div><label>Profit</label><input type="number" id="pProfit" placeholder="0000" readonly style="background:#f9f9f9"></div>
+            <div><label>Stock Qty</label><input type="number" id="pQty" value="0"></div>
+            <div><label>Min Limit</label><input type="number" id="pMin" value="5"></div>
+            <div><label>Season</label>
+                <select id="pSeason">
+                    <option value="All">All Season</option>
+                    <option value="Winter">Winter</option>
+                    <option value="Summer">Summer</option>
+                </select>
+            </div>
+            <div><label>Expiry</label><input type="date" id="pExpiry"></div>
+        </div>
+        <button class="btn-add" onclick="addProduct()">➕ Add Product to Stock</button>
+    </div>
+
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3>📊 Stock Inventory List</h3>
+            <input type="text" id="pSearch" onkeyup="searchProduct()" placeholder="Search Name, Code or Company..." style="width:300px;">
+        </div>
+        <div class="table-res">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Inv#</th><th>Code</th><th>Company</th><th>Product Name</th>
+                        <th>Cost</th><th>Sale</th><th>Qty</th><th>Season</th><th>Expiry</th><th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="productBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<footer id="footerTicker">
+    <div class="ticker" id="tickerText">Checking stock levels... System Secure... 1 MG Trader Pro</div>
+</footer>
+
+<script>
+    let stock = JSON.parse(localStorage.getItem('mg_final_products')) || [];
+    let masters = JSON.parse(localStorage.getItem('mg_masters')) || { Company: [], Category: [], SubCategory: [] };
+
+    function init() {
+        renderMasters();
+        renderTable();
+        updateTicker();
+    }
+
+    // [Target 4: Master Management]
+    function manageMaster(type) {
+        let val = prompt(`Enter New ${type} Name:`);
+        if(val) {
+            let key = type === 'Sub-Category' ? 'SubCategory' : type;
+            if(!masters[key].includes(val)) {
+                masters[key].push(val);
+                localStorage.setItem('mg_masters', JSON.stringify(masters));
+                renderMasters();
+            }
         }
+    }
+
+    function renderMasters() {
+        let fill = (id, list) => {
+            let el = document.getElementById(id);
+            el.innerHTML = list.map(i => `<option value="${i}">${i}</option>`).join('') || `<option>No Data</option>`;
+        };
+        fill('pComp', masters.Company);
+        fill('pCat', masters.Category);
+        fill('pSubCat', masters.SubCategory);
+    }
+
+    function calcProfit() {
+        let cost = parseFloat(document.getElementById('pCost').value) || 0;
+        let sale = parseFloat(document.getElementById('pSale').value) || 0;
+        document.getElementById('pProfit').value = sale - cost;
+    }
+
+    // --- Updated Logic for Add, Edit and History ---
+
+// 1. Smart Add & Merge Logic [Target 3]
+// Button ke click par ye chalayein
+async function saveToCloud() {
+    const item = {
+        name: document.getElementById('pName').value,
+        qty: Number(document.getElementById('pQty').value),
+        price: Number(document.getElementById('pPrice').value),
+        // ... baqi fields bhi isi tarah
     };
 
-    // Search function (Local)
-    window.searchProduct = function() {
+    await addDoc(stockCol, item); // Ye line data cloud par bhej degi
+    alert("Stock Cloud par chala gaya!");
+}
+
+// 2. Secured Edit Logic [Target 2]
+function editProduct(id) {
+    let pass = prompt("🔐 Enter Master Edit Password (9 Digits):");
+    if (pass === "123456789") {
+        let p = stock.find(item => item.id === id);
+        // Fields mein data wapas bharo taake user edit kar sake
+        document.getElementById('pInv').value = p.inv;
+        document.getElementById('pCode').value = p.code;
+        document.getElementById('pName').value = p.name;
+        document.getElementById('pQty').value = p.qty;
+        document.getElementById('pCost').value = p.cost;
+        document.getElementById('pSale').value = p.sale;
+        
+        // Purana item delete kar do, save par naya add ho jayega
+        stock = stock.filter(item => item.id !== id);
+        localStorage.setItem('mg_final_products', JSON.stringify(stock));
+        alert("✏️ Edit Mode Active. Make changes and click 'Add Product' to save.");
+        window.scrollTo(0,0);
+    } else {
+        alert("❌ Wrong Password!");
+    }
+}
+
+// 3. History Viewer [Target 1]
+function viewHistory(id) {
+    let p = stock.find(item => item.id === id);
+    let historyHtml = p.history ? p.history.map(h => `
+        <tr>
+            <td>${h.date}</td>
+            <td>${h.type}</td>
+            <td>${h.qty}</td>
+            <td><b>${h.remaining}</b></td>
+        </tr>
+    `).reverse().join('') : "<tr><td colspan='4'>No history found</td></tr>";
+
+    // Display in a simple alert or modal
+    let modalWindow = window.open('', '', 'width=600,height=400');
+    modalWindow.document.write(`
+        <h3>📜 Stock History: ${p.name}</h3>
+        <table border="1" style="width:100%; border-collapse:collapse; font-family:sans-serif;">
+            <tr style="background:#2c3e50; color:white;">
+                <th>Date/Time</th><th>Event</th><th>Change</th><th>Balance</th>
+            </tr>
+            ${historyHtml}
+        </table>
+    `);
+}
+
+ onSnapshot(stockCol, (snapshot) => {
+    let html = "";
+    snapshot.forEach((docSnap) => {
+        const p = docSnap.data();
+        const id = docSnap.id; // Firebase ki unique ID
+        html += `<tr>
+            <td>${p.name}</td>
+            <td>${p.qty}</td>
+            <td><button onclick="deleteFromCloud('${id}')">🗑️</button></td>
+        </tr>`;
+    });
+    document.getElementById('productBody').innerHTML = html;
+});
+
+    function updateTicker() {
+        let lowItems = stock.filter(p => p.qty <= p.min).length;
+        let expItems = stock.filter(p => {
+            if(!p.expiry) return false;
+            let diff = (new Date(p.expiry) - new Date()) / (1000 * 60 * 60 * 24);
+            return diff < 60;
+        }).length;
+        document.getElementById('tickerText').innerText = `⚠️ ALERT: ${lowItems} Items Low Stock | 🕒 EXPIRE: ${expItems} Items Expiring Soon | Malik12345 Secure System`;
+    }
+
+    function deleteProduct(id) {
+        if(prompt("Enter Admin Password:") === "Malik12345") {
+            stock = stock.filter(p => p.id !== id);
+            localStorage.setItem('mg_final_products', JSON.stringify(stock));
+            location.reload();
+        } else { alert("Access Denied!"); }
+    }
+
+    function deleteMaster() {
+        if(prompt("Admin Password to WIPE Master List:") === "Malik12345") {
+            localStorage.removeItem('mg_masters');
+            location.reload();
+        }
+    }
+
+    function searchProduct() {
         let val = document.getElementById('pSearch').value.toUpperCase();
         let rows = document.getElementById('productBody').getElementsByTagName('tr');
-        for (let i = 0; i < rows.length; i++) {
-            rows[i].style.display = rows[i].innerText.toUpperCase().includes(val) ? "" : "none";
+        for (let row of rows) {
+            row.style.display = row.innerText.toUpperCase().includes(val) ? "" : "none";
         }
     }
 </script>
-
 </body>
 </html>
