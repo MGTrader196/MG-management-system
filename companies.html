@@ -2,207 +2,319 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>1 MG Trader | Company Ledger Management</title>
+    <title>1 MG Trader | Premium Company Ledger</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding-bottom: 50px; }
-        .header { background: #2c3e50; color: white; padding: 20px; text-align: center; }
-        .container { max-width: 1100px; margin: 20px auto; padding: 0 20px; }
+        :root { --primary: #1e293b; --secondary: #3b82f6; --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --bg: #f1f5f9; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%); margin: 0; padding-bottom: 100px; color: #334155; }
         
-        /* Stylish Input Boxes Like Sales.html */
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
-        label { font-size: 11px; font-weight: bold; color: #3498db; text-transform: uppercase; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-top: 5px; box-sizing: border-box; }
+        /* Header */
+        .header { background: var(--primary); color: white; padding: 15px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.15); position: relative; }
+        .user-badge { position: absolute; top: 15px; right: 20px; background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 20px; font-size: 11px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold; color: #60a5fa; }
+        .container { max-width: 1150px; margin: 15px auto; padding: 0 15px; }
         
-        .btn-add { background: #27ae60; color: white; padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 16px; margin-top: 10px; }
-        
-        /* Ledger Table */
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
-        th { background: #34495e; color: white; padding: 12px; text-align: left; }
-        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
-        .balance-red { color: #e74c3c; font-weight: bold; }
-        .balance-green { color: #27ae60; font-weight: bold; }
-        
-        .history-btn { background: #3498db; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        /* Entry Card */
+        .card { background: white; padding: 18px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-bottom: 15px; border: 1px solid #e2e8f0; }
+        .entry-card { border-top: 4px solid var(--secondary); }
+        .grid-input { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 10px; }
+        label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; display: block; }
+        input, select { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box; background: #f8fafc; }
+        .btn-save { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; width: 100%; font-size: 14px; text-transform: uppercase; margin-top: 5px; transition: 0.3s; }
+        .btn-save:hover { transform: scale(1.01); box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4); }
+
+        /* Search Bar */
+        .search-container { background: linear-gradient(to right, #1e293b, #334155); padding: 12px; border-radius: 15px; margin-bottom: 15px; }
+        .search-input { width: 100%; padding: 10px 45px; border-radius: 50px; border: none; font-size: 14px; outline: none; }
+
+        /* Table */
+        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+        th { font-size: 11px; color: #64748b; text-transform: uppercase; padding: 10px; text-align: left; }
+        td { background: white; padding: 12px; font-size: 13px; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; }
+        .blacklisted td { background: #fff1f2 !important; }
+
+        /* Modern Footer */
+        footer { position: fixed; bottom: 0; width: 100%; background: #0f172a; color: white; padding: 8px 0; z-index: 1000; border-top: 2px solid var(--secondary); }
+        .footer-content { display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
+        .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .online-dot { background-color: #10b981; box-shadow: 0 0 8px #10b981; animation: pulse 1.5s infinite; }
+        .offline-dot { background-color: #ef4444; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        .ticker-wrap { flex: 1; overflow: hidden; margin: 0 20px; white-space: nowrap; }
+        .ticker-move { display: inline-block; animation: ticker 30s linear infinite; font-size: 12px; font-weight: 600; color: #94a3b8; }
+        @keyframes ticker { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+
+        /* Modal & Edit Style */
+        .modal { display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); backdrop-filter: blur(5px); }
+        .modal-content { background:white; margin:1% auto; padding:20px; width:95%; border-radius:15px; max-height:92vh; overflow-y:auto; }
+        .edit-btn { background: #fef3c7; color: #d97706; border: 1px solid #fbbf24; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; margin-right: 5px; }
+        .del-btn { background: #fee2e2; color: #dc2626; border: 1px solid #f87171; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+
+        @media print { .no-print { display: none !important; } }
     </style>
 </head>
-<body onload="initCompany()">
+<body>
 
-<div class="header">
-    <h1>🏢 Company & Supplier Ledger</h1>
-    <p>Manage Invoices, Payments & Stock History</p>
-    <nav style="margin-top: 10px;">
-        <a href="index.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">🏠 Dashboard</a>
-        <a href="workers.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">👥 Workers</a>
-    
+<div class="header no-print">
+    <div class="user-badge">👤 <span id="displayUser">Admin</span></div>
+    <h2 style="margin:0;">1 MG TRADER <span style="font-weight:300; font-size:14px;">| Company Cloud Ledger</span></h2>
+    <nav style="margin-top: 8px;">
+        <a href="index.html" style="color: white; text-decoration: none; margin: 0 10px; font-size: 12px; font-weight: 600;">Dashboard</a>
+        <a href="customers.html" style="color: white; text-decoration: none; margin: 0 10px; font-size: 12px; font-weight: 600;">Customers</a>
+    </nav>
 </div>
 
-<div class="container">
-    <div class="card">
-        <h3>➕ Add New Company or Update Khata</h3>
-        <div class="grid-4">
-            <div>
-                <label>Select Company</label>
-                <input list="compList" id="compName" placeholder="Search or Type New Company...">
-                <datalist id="compList"></datalist>
-            </div>
-            <div><label>Invoice Number</label><input type="text" id="invNo" placeholder="INV-001"></div>
-            <div><label>Invoice Amount (Purchase)</label><input type="number" id="purchaseAmt" value="0"></div>
-            <div><label>Paid Amount (Cash Out)</label><input type="number" id="paidAmt" value="0"></div>
+<div class="container no-print">
+    <div class="card entry-card">
+        <div class="grid-input">
+            <div><label>Company Name</label><input list="compList" id="compName" placeholder="Search..."><datalist id="compList"></datalist></div>
+            <div><label>Phone No</label><input type="text" id="compPhone" placeholder="03xx-xxxxxxx"></div>
+            <div><label>Location/Factory</label><input type="text" id="compAddress" placeholder="Address"></div>
+            <div><label>Invoice/Bilty #</label><input type="text" id="invNo" placeholder="Bill No"></div>
         </div>
-        <div class="grid-4">
-            <div style="grid-column: span 2;"><label>Description / Item Details</label><input type="text" id="invNote" placeholder="e.g. 1000 Liters Oil Paint, 500 Brushes"></div>
+        <div class="grid-input">
+            <div><label>Description</label><input type="text" id="invNote" placeholder="Maal Detail"></div>
             <div>
-    <label>Date & Time</label>
-    <input type="datetime-local" id="invDateTime">
-</div>
-            <div><button class="btn-add" onclick="saveTransaction()">💾 Save Transaction</button></div>
+                <label>Season</label>
+                <select id="season">
+                    <option value="Summer">☀️ Summer</option><option value="Winter">❄️ Winter</option>
+                    <option value="Spring">🌱 Spring</option><option value="Autumn">🍂 Autumn</option>
+                </select>
+            </div>
+            <div><label>Item Expiry</label><input type="date" id="expiryDate"></div>
+            <div><label>A/C Status</label><select id="isBlacklisted"><option value="false">✅ Active</option><option value="true">🛑 Blacklist</option></select></div>
+        </div>
+        <div class="grid-input" style="grid-template-columns: 1fr 1fr 2fr;">
+            <div><label>Purchase (+)</label><input type="number" id="purchaseAmt" value="0"></div>
+            <div><label>Paid (-)</label><input type="number" id="paidAmt" value="0"></div>
+            <div><label>Date & Time</label><input type="datetime-local" id="invDateTime"></div>
+        </div>
+        <button class="btn-save" id="saveBtn">💾 Save Transaction</button>
+    </div>
+
+    <div class="search-container">
+        <div style="position: relative;">
+            <i class="fa fa-search" style="position: absolute; left: 15px; top: 12px; color: #3b82f6;"></i>
+            <input type="text" id="searchBox" class="search-input" placeholder="Search by Name, Mobile, Location..." oninput="renderTable()">
         </div>
     </div>
 
-    <div class="card">
-        <h3>📋 Company Wise Balances (Ledger Book)</h3>
+    <div class="card" style="padding: 10px;">
         <table>
-            <thead>
-                <tr>
-                    <th>Company Name</th>
-                    <th>Total Purchase</th>
-                    <th>Total Paid</th>
-                    <th>Remaining Balance</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
+            <thead><tr><th>Company Info</th><th>Season</th><th>Balance</th><th>Actions</th></tr></thead>
             <tbody id="companyTableBody"></tbody>
         </table>
     </div>
 </div>
 
-<div id="historyModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:80%; height:80%; background:white; box-shadow:0 0 100px rgba(0,0,0,0.5); border-radius:15px; padding:20px; overflow-y:auto; z-index:1000;">
-    <button onclick="document.getElementById('historyModal').style.display='none'" style="float:right; background:red; color:white;">Close X</button>
-    <h2 id="modalTitle">Company History</h2>
-    <table id="historyTable">
-        <thead><tr><th>Date</th><th>Invoice</th><th>Description</th><th>Debit (-)</th><th>Credit (+)</th><th>Balance</th></tr></thead>
-        <tbody id="historyBody"></tbody>
-    </table>
+<div id="historyModal" class="modal">
+    <div class="modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:center;" class="no-print">
+            <h2 id="modalTitle">Ledger Statement</h2>
+            <div style="display:flex; gap:8px;">
+                <button onclick="window.print()" style="background:var(--secondary); color:white; border:none; padding:10px 15px; border-radius:8px; cursor:pointer;"><i class="fa fa-print"></i> PRINT</button>
+                <button onclick="document.getElementById('historyModal').style.display='none'" style="background:#f1f5f9; padding:10px 15px; border:none; border-radius:8px; cursor:pointer;">Close</button>
+            </div>
+        </div>
+        <div id="printArea">
+            <div style="display:flex; justify-content:space-between; border-bottom: 3px solid var(--secondary); padding-bottom:10px; margin-top:15px;">
+                <div>
+                    <h1 style="color:var(--secondary); margin:0;">1 MG TRADER</h1>
+                    <p id="printCompInfo" style="margin:5px 0; font-weight:bold;"></p>
+                    <p id="billedByInfo" style="font-size:11px; color:#64748b;"></p>
+                </div>
+                <div id="qrcode"></div>
+            </div>
+            <table border="1" style="width:100%; border-collapse:collapse; margin-top:15px; text-align:center; font-size:12px;">
+                <thead style="background:var(--primary); color:white;">
+                    <tr><th>Date</th><th>Inv #</th><th>Details & Admin</th><th>Season</th><th>Purchase</th><th>Paid</th><th>Balance</th><th class="no-print">Edit/Del</th></tr>
+                </thead>
+                <tbody id="historyBody"></tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
-<script>
-    let companies = JSON.parse(localStorage.getItem('mg_companies')) || {};
-
-    function initCompany() {
-        document.getElementById('invDate').valueAsDate = new Date();
-        renderCompanies();
-        updateDatalist();
-    }
-
-    function updateDatalist() {
-        let list = document.getElementById('compList');
-        list.innerHTML = Object.keys(companies).map(c => `<option value="${c}">`).join('');
-    }
-
-    function saveTransaction() {
-    // Sahi IDs ka istemal
-    let name = document.getElementById('compName').value.trim();
-    let inv = document.getElementById('invNo').value || "N/A";
-    let purchase = parseFloat(document.getElementById('purchaseAmt').value) || 0;
-    let paid = parseFloat(document.getElementById('paidAmt').value) || 0;
-    let note = document.getElementById('invNote').value;
-    
-    // Yahan ID check karein jo humne 'invDateTime' rakhi thi
-    let dateTimeInput = document.getElementById('invDateTime'); 
-    let dateTime = dateTimeInput ? dateTimeInput.value : new Date().toISOString();
-
-    if(!name) { 
-        alert("⚠️ Malik! Pehle Company ka naam to likhen."); 
-        return; 
-    }
-
-    // Data Load/Initialize
-    let companies = JSON.parse(localStorage.getItem('mg_companies')) || {};
-    
-    if(!companies[name]) {
-        companies[name] = { totalPurchase: 0, totalPaid: 0, balance: 0, history: [] };
-    }
-
-    // Calculation Logic
-    let prevBalance = companies[name].balance;
-    let newBalance = prevBalance + purchase - paid;
-
-    // Entry Object
-    let entry = {
-        date: dateTime, // Date aur Time dono save honge
-        inv: inv,
-        note: note,
-        purchase: purchase,
-        paid: paid,
-        balance: newBalance
-    };
-
-    // History update
-    companies[name].history.push(entry);
-    companies[name].totalPurchase += purchase;
-    companies[name].totalPaid += paid;
-    companies[name].balance = newBalance;
-
-    // Save to Memory
-    localStorage.setItem('mg_companies', JSON.stringify(companies));
-    
-    alert("✅ Transaction Saved! " + name + " ka khata update ho gaya.");
-    
-    // Page refresh taake table update ho jaye
-    location.reload();
-}
-
-    function renderCompanies() {
-        let html = "";
-        for(let name in companies) {
-            let c = companies[name];
-            html += `<tr>
-                <td><b>${name}</b></td>
-                <td>Rs. ${c.totalPurchase.toLocaleString()}</td>
-                <td>Rs. ${c.totalPaid.toLocaleString()}</td>
-                <td class="${c.balance > 0 ? 'balance-red' : 'balance-green'}">Rs. ${c.balance.toLocaleString()}</td>
-                <td><button class="history-btn" onclick="viewHistory('${name}')">📖 View History</button></td>
-            </tr>`;
-        }
-        document.getElementById('companyTableBody').innerHTML = html || "<tr><td colspan='5'>No companies added yet.</td></tr>";
-    }
-
-    function viewHistory(name) {
-    let c = companies[name];
-    document.getElementById('modalTitle').innerText = name + " - Ledger History";
-    let html = c.history.map(h => `
-        <tr>
-            <td>${h.date.replace('T', ' ')}</td> <td>${h.inv}</td>
-            <td>${h.note}</td>
-            <td style="color:red">+ ${h.purchase}</td>
-            <td style="color:green">- ${h.paid}</td>
-            <td><b>${h.balance}</b></td>
-        </tr>
-    `).reverse().join('');
-    document.getElementById('historyBody').innerHTML = html;
-    document.getElementById('historyModal').style.display = 'block';
-}
-    function initCompany() {
-    let now = new Date();
-    // Local time format for datetime-local input
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    document.getElementById('invDateTime').value = now.toISOString().slice(0, 16);
-    
-    renderCompanies();
-    updateDatalist();
-}
-</script>
-   <footer style="position: fixed; bottom: 0; left: 0; width: 100%; background: #2c3e50; color: white; padding: 10px 0; overflow: hidden; z-index: 100;">
-    <div class="ticker-text" style="display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite;">
-        Offline Local System | 1 MG Trader | Managed by Management System | All Rights Reserved 2024-25
+<footer class="no-print">
+    <div class="footer-content">
+        <div>
+            <span class="status-dot online-dot" id="statusDot"></span>
+            <span style="font-size: 11px; font-weight: bold;" id="statusText">SYSTEM LIVE</span>
+        </div>
+        <div class="ticker-wrap">
+            <div class="ticker-move" id="blacklistTicker">Loading Live Alerts...</div>
+        </div>
+        <div style="font-size: 11px; font-weight: bold; color: var(--secondary);">
+            v5.2 Stable | Malik Cloud
+        </div>
     </div>
 </footer>
 
-<style>
-@keyframes marquee {
-    0% { transform: translateX(100%); }
-    100% { transform: translateX(-100%); }
-}
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, onSnapshot, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyD3So-in02rbcWD7OmuiRXzySQYgCR7iVI",
+        authDomain: "mg-tradere.firebaseapp.com",
+        projectId: "mg-tradere",
+        storageBucket: "mg-tradere.firebasestorage.app",
+        messagingSenderId: "318790809953",
+        appId: "1:318790809953:web:5e829277f6d161e9942d20"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    let allCompanies = {};
+    const ADMIN_PASS = "Malik12345";
+    const CURRENT_USER = localStorage.getItem('logged_admin_id') || "Malik-Admin"; 
+    document.getElementById('displayUser').innerText = CURRENT_USER;
+
+    document.getElementById('invDateTime').value = new Date().toISOString().slice(0, 16);
+
+    // Online/Offline Detection
+    window.addEventListener('online', () => {
+        document.getElementById('statusDot').className = "status-dot online-dot";
+        document.getElementById('statusText').innerText = "SYSTEM LIVE";
+    });
+    window.addEventListener('offline', () => {
+        document.getElementById('statusDot').className = "status-dot offline-dot";
+        document.getElementById('statusText').innerText = "OFFLINE MODE";
+    });
+
+    onSnapshot(collection(db, "companies"), (snap) => {
+        allCompanies = {};
+        let blacklistNames = [];
+        snap.forEach(d => { 
+            let data = d.data();
+            allCompanies[d.id] = data; 
+            if(data.isBlacklisted) blacklistNames.push(d.id);
+        });
+        
+        // Update Footer Ticker
+        if(blacklistNames.length > 0) {
+            document.getElementById('blacklistTicker').innerHTML = `⚠️ BLACKLISTED COMPANIES: ${blacklistNames.join(' | ')} — PLEASE CONTACT ADMIN FOR CLEARANCE — CLOUD SYNC ACTIVE`;
+            document.getElementById('blacklistTicker').style.color = "#ef4444";
+        } else {
+            document.getElementById('blacklistTicker').innerHTML = `✅ ALL COMPANIES ARE ACTIVE — NO PAYMENT PENDING ALERTS — 1 MG TRADER CLOUD SYSTEM RUNNING SMOOTHLY`;
+            document.getElementById('blacklistTicker').style.color = "#94a3b8";
+        }
+        
+        renderTable();
+    });
+
+    document.getElementById('saveBtn').onclick = async () => {
+        let name = document.getElementById('compName').value.trim();
+        if(!name) return alert("Enter Company Name!");
+        let pur = parseFloat(document.getElementById('purchaseAmt').value) || 0;
+        let paid = parseFloat(document.getElementById('paidAmt').value) || 0;
+
+        const ref = doc(db, "companies", name);
+        const snp = await getDoc(ref);
+        let data = snp.exists() ? snp.data() : { totalPurchase:0, totalPaid:0, balance:0, history:[], phone:"", address:"", isBlacklisted:false };
+
+        data.phone = document.getElementById('compPhone').value || data.phone;
+        data.address = document.getElementById('compAddress').value || data.address;
+        data.isBlacklisted = document.getElementById('isBlacklisted').value === "true";
+
+        if(pur > 0 || paid > 0) {
+            let b = data.balance + pur - paid;
+            data.history.push({
+                id: Date.now(),
+                date: document.getElementById('invDateTime').value,
+                inv: document.getElementById('invNo').value || "Manual",
+                note: document.getElementById('invNote').value || "-",
+                season: document.getElementById('season').value,
+                expiry: document.getElementById('expiryDate').value || "-",
+                purchase: pur, paid: paid, balance: b, admin: CURRENT_USER
+            });
+            data.totalPurchase += pur; data.totalPaid += paid; data.balance = b;
+        }
+        await setDoc(ref, data);
+        alert("Saved Successfully!");
+        location.reload();
+    };
+
+    window.renderTable = () => {
+        let html = "";
+        let search = document.getElementById('searchBox').value.toLowerCase();
+        for(let name in allCompanies) {
+            let c = allCompanies[name];
+            if(search && !name.toLowerCase().includes(search)) continue;
+            html += `<tr class="${c.isBlacklisted ? 'blacklisted' : ''}">
+                <td><b>${name}</b><br><small><i class="fa fa-phone"></i> ${c.phone || '-'}</small></td>
+                <td><span style="background:#e2e8f0; padding:3px 8px; border-radius:4px; font-size:11px;">${c.history.length ? c.history[c.history.length-1].season : '-'}</span></td>
+                <td style="color:${c.balance > 0 ? 'red' : 'green'}; font-weight:bold;">${c.balance.toLocaleString()}</td>
+                <td><button onclick="viewHistory('${name}')" style="background:#3b82f6; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">Open Ledger</button></td>
+            </tr>`;
+        }
+        document.getElementById('companyTableBody').innerHTML = html;
+    };
+
+    window.viewHistory = (name) => {
+        let c = allCompanies[name];
+        document.getElementById('modalTitle').innerText = name + " Ledger History";
+        document.getElementById('printCompInfo').innerText = `Company: ${name} | Phone: ${c.phone} | Factory: ${c.address}`;
+        document.getElementById('billedByInfo').innerText = `Report by: ${CURRENT_USER} | ${new Date().toLocaleString()}`;
+        
+        document.getElementById('qrcode').innerHTML = "";
+        new QRCode(document.getElementById('qrcode'), { text: name + " Balance: " + c.balance, width: 60, height: 60 });
+
+        let html = c.history.map(h => `
+            <tr>
+                <td><small>${h.date.replace('T',' ')}</small></td>
+                <td>${h.inv}</td>
+                <td>${h.note}<br><small style="color:#3b82f6">By: ${h.admin || 'Admin'}</small></td>
+                <td>${h.season}</td>
+                <td style="color:red">+${h.purchase}</td>
+                <td style="color:green">-${h.paid}</td>
+                <td style="background:#f8fafc; font-weight:bold;">${h.balance.toLocaleString()}</td>
+                <td class="no-print">
+                    <button class="edit-btn" onclick="editEntry('${name}', ${h.id})"><i class="fa fa-edit"></i></button>
+                    <button class="del-btn" onclick="deleteEntry('${name}', ${h.id})"><i class="fa fa-trash"></i></button>
+                </td>
+            </tr>
+        `).reverse().join('');
+        document.getElementById('historyBody').innerHTML = html;
+        document.getElementById('historyModal').style.display = 'block';
+    };
+
+    window.editEntry = async (name, entryId) => {
+        if(prompt("Admin Password:") !== ADMIN_PASS) return alert("Wrong Password!");
+        let c = allCompanies[name];
+        let entry = c.history.find(h => h.id === entryId);
+        
+        let newNote = prompt("New Description:", entry.note);
+        let newPur = prompt("New Purchase Amount:", entry.purchase);
+        let newPaid = prompt("New Paid Amount:", entry.paid);
+
+        if(newNote !== null) entry.note = newNote;
+        if(newPur !== null) entry.purchase = parseFloat(newPur);
+        if(newPaid !== null) entry.paid = parseFloat(newPaid);
+
+        // Recalculate whole balance logic
+        let b = 0, tp = 0, tpaid = 0;
+        c.history.forEach(h => { tp += h.purchase; tpaid += h.paid; b += (h.purchase - h.paid); h.balance = b; });
+        c.balance = b; c.totalPurchase = tp; c.totalPaid = tpaid;
+        
+        await setDoc(doc(db, "companies", name), c);
+        viewHistory(name);
+    };
+
+    window.deleteEntry = async (name, entryId) => {
+        if(prompt("Malik Password Required:") !== ADMIN_PASS) return alert("Unauthorized!");
+        const ref = doc(db, "companies", name);
+        const snp = await getDoc(ref);
+        let data = snp.data();
+        data.history = data.history.filter(h => h.id !== entryId);
+        
+        let b = 0, tp = 0, tpaid = 0;
+        data.history.forEach(h => { tp += h.purchase; tpaid += h.paid; b += (h.purchase - h.paid); h.balance = b; });
+        data.balance = b; data.totalPurchase = tp; data.totalPaid = tpaid;
+        
+        await setDoc(ref, data);
+        viewHistory(name);
+    };
+</script>
 </body>
 </html>
