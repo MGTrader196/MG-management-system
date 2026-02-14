@@ -2,131 +2,109 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>1 MG Trader | Seller Sales Portal</title>
+    <title>1 MG Trader | Professional Sales Portal</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         :root { --primary: #2c3e50; --secondary: #3498db; --success: #27ae60; --danger: #e74c3c; --warning: #f39c12; --light: #f8f9fa; }
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding-bottom: 80px; }
-        
-        /* Professional Seller Header */
         .main-header { background: var(--primary); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
         .seller-badge { background: var(--secondary); padding: 5px 15px; border-radius: 20px; font-size: 13px; font-weight: bold; }
         .btn-logout { background: var(--danger); color: white; border: none; padding: 8px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-
         .sales-container { display: flex; gap: 20px; padding: 20px; flex-wrap: wrap; }
         .billing-section { flex: 3; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 5px solid var(--secondary); min-width: 600px; }
-        
-        /* Form Grid */
         .grid-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 20px; }
         label { font-size: 11px; font-weight: bold; color: var(--secondary); text-transform: uppercase; }
         input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin-top: 5px; box-sizing: border-box; }
-        
-        /* Product Entry Bar */
         .item-bar { background: var(--light); padding: 20px; border-radius: 12px; display: grid; grid-template-columns: 2fr 1fr 0.8fr 0.8fr 1fr; gap: 10px; align-items: end; border: 1px solid #eee; }
-        
-        /* Fixed Search Dropdown Style */
-        .search-wrapper { position: relative; }
-        #itemSuggest { 
-            position: absolute; width: 100%; background: white; border: 1px solid #ccc; 
-            z-index: 9999; max-height: 250px; overflow-y: auto; display: none; 
-            box-shadow: 0 8px 16px rgba(0,0,0,0.2); border-radius: 0 0 8px 8px; 
-        }
-        .suggest-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #f1f1f1; font-size: 13px; color: #333; transition: 0.2s; }
-        .suggest-item:hover { background: #eef7ff; color: var(--secondary); padding-left: 15px; }
-
-        /* Calculator Styles */
+        .stock-label { font-size: 10px; color: var(--danger); font-weight: bold; display: block; margin-top: 2px; }
         .calc-section { width: 300px; background: #1a252f; padding: 20px; border-radius: 15px; color: white; height: fit-content; }
         .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
         .calc-btn { height: 50px; border-radius: 8px; border: none; font-size: 18px; cursor: pointer; background: #34495e; color: white; }
         #calc-display { width: 100%; height: 50px; font-size: 24px; text-align: right; margin-bottom: 10px; border-radius: 5px; border: none; padding: 5px; background: #fff; color: #000; }
-
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th { background: #f4f7f6; padding: 12px; text-align: left; font-size: 13px; color: var(--primary); border-bottom: 2px solid #ddd; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
-
         .total-bar { background: var(--primary); color: white; padding: 20px; border-radius: 10px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; }
-        
-        footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--primary); color: white; padding: 10px 0; text-align: center; }
+        .edit-mode { background: #fff3cd !important; border: 2px solid var(--warning) !important; }
+        .btn-action { border: none; background: none; cursor: pointer; font-size: 18px; margin: 0 5px; }
     </style>
 </head>
 <body>
 
 <div class="main-header">
     <div style="display: flex; align-items: center; gap: 20px;">
-        <h2 style="margin:0;">1 MG TRADER | SELLER</h2>
-        <div class="seller-badge">👤 Logged as: <span id="sellerIDLabel">m-haroon-123</span></div>
+        <h2 style="margin:0;">🛒 SALES & BILLING | 1 MG TRADER</h2>
+        <div class="seller-badge">👤 Seller: <span id="sellerIDLabel">m-haroon-123</span></div>
     </div>
     <button class="btn-logout" onclick="logout()">LOGOUT</button>
 </div>
 
 <div class="sales-container">
-    <div class="billing-section">
+    <div class="billing-section" id="billPanel">
+        <div id="editIndicator" style="display:none; background:var(--warning); color:black; padding:8px; border-radius:5px; text-align:center; font-weight:bold; margin-bottom:15px; border: 1px dashed black;">⚠️ MODE: EDITING INVOICE <span id="editingInvLabel"></span></div>
+        
         <div class="grid-inputs">
-            <div><label>Invoice #</label><input type="text" id="billInv" readonly></div>
-            <div><label>Billing Date</label><input type="datetime-local" id="billDate"></div>
-            <div><label>Customer Name</label><input type="text" id="custName" placeholder="Walk-in Customer"></div>
-            <div><label>Phone Number</label><input type="text" id="custPhone"></div>
+            <div><label>Bill Date & Time</label><input type="datetime-local" id="billDate"></div>
+            <div><label>Inv #</label><input type="text" id="billInv" readonly></div>
+            <div><label>Customer Name</label><input type="text" id="custName" placeholder="Customer Name"></div>
+            <div><label>Phone</label><input type="text" id="custPhone" placeholder="03XXXXXXXXX" maxlength="11"></div>
+            
         </div>
-
+             <div><label>Area / Address</label><input type="text" id="custArea" placeholder="Complete Adress"></div>
         <div class="item-bar">
-            <div class="search-wrapper">
-                <label>Search Product (Name/Code)</label>
-                <input type="text" id="itemSearch" placeholder="Start typing..." oninput="searchItems(this.value)" autocomplete="off">
-                <div id="itemSuggest"></div>
+            <div>
+                <label>Search Item (Name/Code)</label>
+                <input list="productList" id="itemSearch" placeholder="Type name or code..." oninput="checkPrice(this.value)" autocomplete="off">
+                <datalist id="productList"></datalist>
             </div>
-            <div><label>Price</label><input type="number" id="itemPrice"></div>
+            <div>
+                <label>Price</label>
+                <input type="number" id="itemPrice">
+                
+            </div>
             <div><label>Qty</label><input type="number" id="itemQty" value="1"></div>
             <div><label>Disc%</label><input type="number" id="itemDisc" value="0"></div>
-            <button onclick="addToCart()" style="background:var(--success); color:white; border:none; height:42px; border-radius:6px; cursor:pointer; font-weight:bold;">➕ ADD ITEM</button>
+            <button onclick="addToCart()" style="background:var(--success); color:white; border:none; height:42px; border-radius:6px; cursor:pointer; font-weight:bold; width: 100%;">➕ ADD</button>
         </div>
 
         <table>
             <thead>
-                <tr><th>Description</th><th>Price</th><th>Qty</th><th>Disc</th><th>Total</th><th>Action</th></tr>
+                <tr><th>Item Description</th><th>Price</th><th>Qty</th><th>Total</th><th>X</th></tr>
             </thead>
             <tbody id="billBody"></tbody>
         </table>
 
         <div class="total-bar">
-            <h2 style="margin:0;">NET TOTAL: Rs. <span id="grandTotal">0.00</span></h2>
+            <h2 style="margin:0;">Grand Total: Rs. <span id="grandTotal">0</span></h2>
             <div>
-                <button onclick="saveInvoice('CASH')" style="background:var(--success); padding:12px 25px; border:none; border-radius:6px; color:white; font-weight:bold; cursor:pointer; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3);">💰 SAVE & PRINT</button>
-                <button onclick="saveInvoice('UDHAR')" style="background:var(--warning); padding:12px 25px; border:none; border-radius:6px; color:white; font-weight:bold; cursor:pointer; margin-left:10px;">📝 SAVE AS UDHAR</button>
+                <button onclick="saveInvoice('CASH PAID')" id="saveBtn" style="background:var(--success); padding:12px 25px; border:none; border-radius:6px; color:white; font-weight:bold; cursor:pointer;">💰 CASH PAID</button>
+                <button onclick="saveInvoice('UDHAR')" id="udharBtn" style="background:var(--warning); padding:12px 25px; border:none; border-radius:6px; color:white; font-weight:bold; cursor:pointer; margin-left:10px;">📝 SAVE AS UDHAR</button>
+                <button onclick="cancelEdit()" id="cancelBtn" style="display:none; background:var(--danger); padding:12px 25px; border:none; border-radius:6px; color:white; font-weight:bold; cursor:pointer; margin-left:10px;">CANCEL EDIT</button>
             </div>
         </div>
     </div>
 
     <div class="calc-section">
         <h3 style="margin-top:0;">🧮 Calculator</h3>
-        <input type="text" id="calc-display" readonly>
+        <input type="text" id="calc-display" readonly value="0">
         <div class="calc-grid">
             <button class="calc-btn" onclick="calcC()" style="background:var(--danger)">C</button>
-            <button class="calc-btn" onclick="calcIn('/')">/</button>
-            <button class="calc-btn" onclick="calcIn('*')">*</button>
-            <button class="calc-btn" onclick="calcIn('-')">-</button>
-            <button class="calc-btn" onclick="calcIn('7')">7</button>
-            <button class="calc-btn" onclick="calcIn('8')">8</button>
-            <button class="calc-btn" onclick="calcIn('9')">9</button>
-            <button class="calc-btn" onclick="calcIn('+')">+</button>
-            <button class="calc-btn" onclick="calcIn('4')">4</button>
-            <button class="calc-btn" onclick="calcIn('5')">5</button>
-            <button class="calc-btn" onclick="calcIn('6')">6</button>
+            <button class="calc-btn" onclick="calcIn('/')">/</button><button class="calc-btn" onclick="calcIn('*')">*</button><button class="calc-btn" onclick="calcIn('-')">-</button>
+            <button class="calc-btn" onclick="calcIn('7')">7</button><button class="calc-btn" onclick="calcIn('8')">8</button><button class="calc-btn" onclick="calcIn('9')">9</button><button class="calc-btn" onclick="calcIn('+')">+</button>
+            <button class="calc-btn" onclick="calcIn('4')">4</button><button class="calc-btn" onclick="calcIn('5')">5</button><button class="calc-btn" onclick="calcIn('6')">6</button>
             <button class="calc-btn" onclick="calcRes()" style="background:var(--success); grid-row: span 2;">=</button>
-            <button class="calc-btn" onclick="calcIn('1')">1</button>
-            <button class="calc-btn" onclick="calcIn('2')">2</button>
-            <button class="calc-btn" onclick="calcIn('3')">3</button>
-            <button class="calc-btn" onclick="calcIn('0')" style="grid-column: span 2;">0</button>
-            <button class="calc-btn" onclick="calcIn('.')">.</button>
+            <button class="calc-btn" onclick="calcIn('1')">1</button><button class="calc-btn" onclick="calcIn('2')">2</button><button class="calc-btn" onclick="calcIn('3')">3</button>
+            <button class="calc-btn" onclick="calcIn('0')" style="grid-column: span 2;">0</button><button class="calc-btn" onclick="calcIn('.')">.</button>
         </div>
     </div>
 </div>
 
 <div class="sales-container">
     <div class="billing-section" style="border-top-color: var(--primary);">
-        <h3>📜 YOUR RECENT INVOICES</h3>
+        <h3>📜 Recent Bill History</h3>
         <table>
             <thead>
-                <tr><th>Date</th><th>Inv #</th><th>Customer</th><th>Total</th><th>Status</th><th>Actions</th></tr>
+                <tr><th>Date & Time</th><th>Inv #</th><th>Customer</th><th>Total</th><th>Status</th><th>Actions</th></tr>
             </thead>
             <tbody id="historyBody"></tbody>
         </table>
@@ -151,32 +129,40 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     let allProducts = [], cart = [], selectedItem = null;
+    let isEditing = false, editDocId = null;
 
-    // --- By Default Seller ID ---
-    // Agar login page se ID nahi ayi to 'm-haroon-123' set ho jayegi
     const sellerID = localStorage.getItem('logged_seller_id') || "m-haroon-123"; 
     document.getElementById('sellerIDLabel').innerText = sellerID;
 
-    // Load Stock
+    // Load Stock into Datalist (Search by Name and Code)
     onSnapshot(collection(db, "products"), snap => {
-        allProducts = []; snap.forEach(d => allProducts.push({id: d.id, ...d.data()}));
+        allProducts = [];
+        let listHtml = "";
+        snap.forEach(d => {
+            let p = {id: d.id, ...d.data()};
+            allProducts.push(p);
+            let displayString = `${p.code ? p.code + ' - ' : ''}${p.name}`;
+            listHtml += `<option value="${displayString}">Available Stock: ${p.qty}</option>`;
+        });
+        document.getElementById('productList').innerHTML = listHtml;
     });
 
-    // Load History
+    // Load History with Delete Protection
     onSnapshot(query(collection(db, "sales"), orderBy("date", "desc")), snap => {
         let html = "";
         snap.forEach(d => {
             let s = d.data();
+            let delStatus = s.deleteRequest ? '<br><small style="color:orange;">[Delete Pending]</small>' : '';
             html += `<tr>
                 <td>${s.date.replace('T',' ')}</td>
-                <td><b>${s.inv}</b></td>
+                <td><b>${s.inv}</b>${delStatus}</td>
                 <td>${s.customer}</td>
                 <td>Rs. ${s.total}</td>
                 <td style="color:${s.status==='UDHAR'?'red':'green'}">${s.status}</td>
                 <td>
-                    <button onclick="printBill('${d.id}')" title="Print">🖨️</button>
-                    <button onclick="editBill('${d.id}')" style="color:var(--secondary)" title="Edit">📝</button>
-                    <button onclick="deleteBill('${d.id}')" style="color:red" title="Delete">🗑️</button>
+                    <button class="btn-action" onclick="printBill('${d.id}')" title="Print">🖨️</button>
+                    <button class="btn-action" onclick="editBill('${d.id}')" style="color:var(--secondary)" title="Edit">📝</button>
+                    <button class="btn-action" onclick="requestDelete('${d.id}')" style="color:red" title="Request Delete">🗑️</button>
                 </td>
             </tr>`;
         });
@@ -184,138 +170,158 @@
         window.currentSales = snap.docs.map(d => ({id: d.id, ...d.data()}));
     });
 
-    // Dropdown Search Logic
-    window.searchItems = (val) => {
-        const div = document.getElementById('itemSuggest');
-        if(!val) { div.style.display='none'; return; }
-        const matches = allProducts.filter(p => (p.name + (p.code || '')).toUpperCase().includes(val.toUpperCase()));
-        if(matches.length > 0) {
-            div.innerHTML = matches.map(p => `
-                <div class="suggest-item" onclick="selectItem('${p.id}')">
-                    <b>${p.code || 'CODE'}</b> - ${p.name} | <span style="color:green">Price: ${p.sale}</span>
-                </div>`).join('');
-            div.style.display = 'block';
-        } else {
-            div.style.display = 'none';
+    window.checkPrice = (val) => {
+        const product = allProducts.find(p => {
+            let combined = `${p.code ? p.code + ' - ' : ''}${p.name}`;
+            return combined === val || p.name === val || p.code === val;
+        });
+
+        if(product) {
+            selectedItem = product;
+            document.getElementById('itemPrice').value = product.price || product.sale;
+            document.getElementById('stockAvailable').innerText = "Stock: " + product.qty;
+            document.getElementById('stockAvailable').style.color = product.qty < 5 ? "red" : "green";
         }
     };
 
-    window.selectItem = (id) => {
-        selectedItem = allProducts.find(p => p.id === id);
-        document.getElementById('itemSearch').value = selectedItem.name;
-        document.getElementById('itemPrice').value = selectedItem.sale;
-        document.getElementById('itemSuggest').style.display='none';
-    };
-
     window.addToCart = () => {
-        if(!selectedItem) return alert("Pehle product select karein!");
+        if(!selectedItem) return alert("Please select a product from the list!");
         let q = Number(document.getElementById('itemQty').value);
         let p = Number(document.getElementById('itemPrice').value);
         let d = Number(document.getElementById('itemDisc').value);
+        
+        if(q > selectedItem.qty && !isEditing) {
+            alert("Not enough stock! Available: " + selectedItem.qty);
+            return;
+        }
+
         let total = (p * q) - (p * q * d / 100);
         cart.push({ id: selectedItem.id, name: selectedItem.name, price: p, qty: q, disc: d, total: total });
         renderCart();
-        // Clear Search
+        
+        // Reset Item Bar
         document.getElementById('itemSearch').value = "";
+        document.getElementById('itemPrice').value = "";
+        document.getElementById('stockAvailable').innerText = "Stock: 0";
         selectedItem = null;
     };
 
     function renderCart() {
         let h = ""; let gt = 0;
-        cart.forEach((it, i) => { gt += it.total; h += `<tr><td>${it.name}</td><td>${it.price}</td><td>${it.qty}</td><td>${it.disc}%</td><td>${it.total.toFixed(2)}</td><td onclick="cart.splice(${i},1);renderCart()" style="cursor:pointer; color:red">✖</td></tr>`; });
+        cart.forEach((it, i) => { 
+            gt += it.total; 
+            h += `<tr><td>${it.name}</td><td>${it.price}</td><td>${it.qty}</td><td>${it.total.toFixed(0)}</td><td onclick="cart.splice(${i},1);renderCart()" style="cursor:pointer; color:red; font-weight:bold;">✖</td></tr>`; 
+        });
         document.getElementById('billBody').innerHTML = h;
-        document.getElementById('grandTotal').innerText = gt.toFixed(2);
+        document.getElementById('grandTotal').innerText = gt.toFixed(0);
     }
 
     window.saveInvoice = async (status) => {
-        if(!cart.length) return alert("Cart khali hai!");
+        if(!cart.length) return alert("Cart is empty!");
+        
         const bill = {
             inv: document.getElementById('billInv').value,
             date: document.getElementById('billDate').value,
-            customer: document.getElementById('custName').value || "Walk-in Customer",
+            customer: document.getElementById('custName').value || "Guest",
             phone: document.getElementById('custPhone').value,
+            area: document.getElementById('custArea').value,
             items: cart,
             total: Number(document.getElementById('grandTotal').innerText),
             status: status,
-            billedBy: sellerID
+            billedBy: sellerID,
+            lastModified: new Date().toLocaleString()
         };
-        const docRef = await addDoc(collection(db, "sales"), bill);
-        for(let it of cart) { await updateDoc(doc(db, "products", it.id), { qty: increment(-it.qty) }); }
-        printBill(docRef.id);
-        location.reload();
+
+        try {
+            if(isEditing && editDocId) {
+                await updateDoc(doc(db, "sales", editDocId), bill);
+                alert("✅ Invoice Updated Successfully!");
+            } else {
+                const docRef = await addDoc(collection(db, "sales"), bill);
+                for(let it of cart) { await updateDoc(doc(db, "products", it.id), { qty: increment(-it.qty) }); }
+                editDocId = docRef.id;
+            }
+            printBill(editDocId);
+            location.reload();
+        } catch (e) { alert("Error saving bill: " + e.message); }
+    };
+
+    window.editBill = (id) => {
+        const pass = prompt("Enter Password to Edit (Malik12345):");
+        if(pass !== "Malik12345") return alert("Unauthorized Access!");
+        
+        const bill = window.currentSales.find(s => s.id === id);
+        isEditing = true;
+        editDocId = id;
+
+        // Visual Indicator
+        document.getElementById('billPanel').classList.add('edit-mode');
+        document.getElementById('editIndicator').style.display = "block";
+        document.getElementById('editingInvLabel').innerText = bill.inv;
+        document.getElementById('cancelBtn').style.display = "inline-block";
+        document.getElementById('saveBtn').innerText = "Update Cash Bill";
+        document.getElementById('udharBtn').innerText = "Update Udhar";
+
+        // Load Fields
+        document.getElementById('billInv').value = bill.inv;
+        document.getElementById('billDate').value = bill.date;
+        document.getElementById('custName').value = bill.customer;
+        document.getElementById('custPhone').value = bill.phone;
+        document.getElementById('custArea').value = bill.area || "";
+        cart = [...bill.items];
+        renderCart();
+        window.scrollTo(0,0);
+    };
+
+    window.cancelEdit = () => { location.reload(); };
+
+    window.requestDelete = async (id) => {
+        if(confirm("Send delete request to Admin for approval?")) {
+            await updateDoc(doc(db, "sales", id), { deleteRequest: true });
+            alert("Request sent! Admin will approve the deletion.");
+        }
     };
 
     window.printBill = (id) => {
         const bill = window.currentSales.find(s => s.id === id);
         if(!bill) return;
 
-        const qrContent = `Invoice: ${bill.inv} | Total: ${bill.total} | Seller: ${bill.billedBy}`;
+        const qrContent = `Inv:${bill.inv}|Total:${bill.total}|Seller:${bill.billedBy}`;
         document.getElementById('qrcode').innerHTML = "";
         new QRCode(document.getElementById("qrcode"), { text: qrContent, width: 80, height: 80 });
 
         setTimeout(() => {
             const qrImg = document.querySelector('#qrcode img').src;
-            let printWindow = window.open('', '', 'width=800,height=600');
-            let itemsHtml = bill.items.map(it => `<tr><td>${it.name}</td><td>${it.qty}</td><td>${it.price}</td><td>${it.total.toFixed(2)}</td></tr>`).join('');
-            
-            printWindow.document.write(`
-                <html><head><title>Print Invoice</title>
-                <style>
-                    body{font-family:sans-serif; padding:10px; font-size:12px; line-height:1.4;}
-                    .header{text-align:center; border-bottom:1px dashed #000; padding-bottom:10px; margin-bottom:10px;}
-                    table{width:100%; border-collapse:collapse;}
-                    th,td{padding:5px; text-align:left; border-bottom:1px solid #eee;}
-                    .footer{margin-top:15px; border-top:1px dashed #000; padding-top:10px; display:flex; justify-content:space-between;}
-                </style></head><body>
-                <div class="header"><h2>1 MG TRADER</h2><p>Sale Receipt</p></div>
-                <p><b>Date:</b> ${bill.date.replace('T',' ')} | <b>Inv:</b> ${bill.inv}</p>
-                <p><b>Customer:</b> ${bill.customer}</p>
-                <table><thead><tr><th>Item</th><th>Qty</th><th>Rate</th><th>Total</th></tr></thead>
-                <tbody>${itemsHtml}</tbody></table>
-                <div class="footer">
-                    <div>
-                        <h3>Total: Rs. ${bill.total}</h3>
-                        <p>Billed By: ${bill.billedBy}</p>
-                        <p><i>Thank you for shopping!</i></p>
-                    </div>
-                    <img src="${qrImg}" style="width:70px; height:70px;"/>
-                </div>
-                <script>window.print(); window.close();<\/script>
-                </body></html>
+            let pW = window.open('', '', 'width=800,height=600');
+            let itemsHtml = bill.items.map(it => `<tr><td>${it.name}</td><td>${it.qty}</td><td>${it.price}</td><td>${it.total.toFixed(0)}</td></tr>`).join('');
+            pW.document.write(`
+                <html><head><style>body{font-family:sans-serif;padding:20px;} table{width:100%;border-collapse:collapse;margin-top:10px;} th,td{border-bottom:1px solid #ddd;padding:8px;text-align:left;}</style></head>
+                <body><center><h2>1 MG TRADER</h2><p>Official Sales Receipt</p></center>
+                <hr>
+                <p><b>Invoice:</b> ${bill.inv} | <b>Date:</b> ${bill.date.replace('T', ' ')}</p>
+                <p><b>Customer:</b> ${bill.customer} | ${bill.phone}</p>
+                <table><thead><tr><th>Item</th><th>Qty</th><th>Rate</th><th>Total</th></tr></thead><tbody>${itemsHtml}</tbody></table>
+                <div style="display:flex;justify-content:space-between;margin-top:20px;border-top:2px solid #000;padding-top:10px;">
+                    <div><h3>Net Total: Rs. ${bill.total}</h3><p>Billed By: ${bill.billedBy}</p></div>
+                    <img src="${qrImg}" />
+                </div><script>window.print();window.close();<\/script></body></html>
             `);
-            printWindow.document.close();
-        }, 600);
+            pW.document.close();
+        }, 500);
     };
 
-    window.deleteBill = async (id) => {
-        if(confirm("Ye bill delete karne se stock pe koi asar nahi parega (sirf history se delete hoga). Delete karein?")) {
-            await deleteDoc(doc(db, "sales", id));
-        }
-    };
+    window.logout = () => { localStorage.removeItem('logged_seller_id'); window.location.href = "index.html"; };
 
-    window.editBill = (id) => {
-        const bill = window.currentSales.find(s => s.id === id);
-        document.getElementById('custName').value = bill.customer;
-        document.getElementById('custPhone').value = bill.phone;
-        cart = bill.items;
-        renderCart();
-        window.scrollTo(0,0);
-        alert("Invoice data cart mein load ho gaya hai. Aap naye items add kar ke dobara save kar sakte hain.");
-    };
-
-    window.logout = () => {
-        localStorage.removeItem('logged_seller_id');
-        window.location.href = "index.html"; // Wapas login/main page
-    };
-
+    // Initial Setup
     document.getElementById('billDate').value = new Date().toISOString().slice(0, 16);
-    document.getElementById('billInv').value = "INV-" + Date.now().toString().slice(-6);
+    document.getElementById('billInv').value = "INV-" + Math.floor(100000 + Math.random() * 900000);
 </script>
 
 <script>
-    function calcIn(v) { document.getElementById('calc-display').value += v; }
-    function calcC() { document.getElementById('calc-display').value = ""; }
-    function calcRes() { try { document.getElementById('calc-display').value = eval(document.getElementById('calc-display').value); } catch(e) { alert("Error"); } }
+    const display = document.getElementById('calc-display');
+    function calcIn(v) { if(display.value === "0") display.value = v; else display.value += v; }
+    function calcC() { display.value = "0"; }
+    function calcRes() { try { display.value = eval(display.value); } catch(e) { display.value = "Error"; } }
 </script>
 </body>
 </html>
