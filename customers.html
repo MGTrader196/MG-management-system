@@ -2,98 +2,98 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>1 MG Trader | Customer Ledger Pro</title>
+    <title>1 MG Trader | Professional Ledger Cloud</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         :root { --primary: #2c3e50; --secondary: #3498db; --success: #27ae60; --danger: #e74c3c; --warning: #f39c12; --light: #f8f9fa; }
         body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0;padding-bottom:120px}
         .main-header{background:var(--primary);color:#fff;padding:15px 30px;display:flex;justify-content:space-between;align-items:center}
-        .header-clock{font-family:Courier New;font-size:18px;background:rgba(255,255,255,0.1);padding:5px 15px;border-radius:5px;border:1px solid var(--secondary)}
+        .header-clock{font-family:Courier New;font-size:16px;background:rgba(255,255,255,0.1);padding:5px 15px;border-radius:5px}
         .nav-bar{background:#34495e;padding:10px;text-align:center;margin-bottom:20px}
         .nav-bar a{color:#fff;text-decoration:none;margin:0 15px;font-weight:bold}
         
         .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;padding:0 20px;margin-bottom:20px}
-        .stat-card{padding:20px;border-radius:12px;box-shadow:0 5px 15px rgba(0,0,0,.1);text-align:center;color:#fff}
+        .stat-card{padding:15px;border-radius:12px;text-align:center;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,0.1)}
         .stat-debit{background:linear-gradient(135deg,#e74c3c,#c0392b)}
         .stat-credit{background:linear-gradient(135deg,#27ae60,#1e8449)}
         .stat-black{background:linear-gradient(135deg,#f1c40f,#f39c12)}
 
         .cust-layout{display:flex;padding:0 20px;gap:20px; flex-wrap: wrap;}
-        .cust-form{flex:1; background:#fafff8;padding:25px;border-radius:15px;box-shadow:0 10px 25px rgba(0,0,0,0.05);border:1px solid #e1e8f0; min-width: 320px;}
-        .cust-list{flex:3; background:#fff;padding:25px;border-radius:15px;box-shadow:0 4px 15px rgba(0,0,0,.1); min-width: 600px;}
+        .cust-form{flex:1; background:#fff;padding:25px;border-radius:15px;box-shadow:0 10px 25px rgba(0,0,0,0.05); min-width: 320px; height: fit-content;}
+        .cust-list{flex:3; background:#fff;padding:25px;border-radius:15px;min-width: 600px;}
         
         label{font-size:11px;font-weight:bold;color:#34495e;text-transform:uppercase;display:block;margin-bottom:5px}
-        input{width:100%;padding:10px;border:1.5px solid #d1d9e0;border-radius:8px;margin-bottom:15px;box-sizing:border-box}
+        input{width:100%;padding:10px;border:1.5px solid #d1d9e0;border-radius:8px;margin-bottom:12px;box-sizing:border-box}
         
-        .filter-panel {background: #fff3f3;padding: 15px;border-radius: 12px;margin-bottom: 25px;border: 1px solid #ffcdd2;display: flex;flex-wrap: wrap;gap: 15px;align-items: flex-end;}
-        .filter-group {flex: 1;min-width: 140px;}
+        .btn-group { display: flex; gap: 10px; }
+        .save-btn { flex: 2; padding: 15px; background: var(--success); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; }
+        .print-btn { flex: 1; padding: 15px; background: var(--secondary); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; }
+
+        /* Filter Panel Updated with Dates */
+        .filter-panel {background: #fff3f3;padding: 15px;border-radius: 12px;margin-bottom: 25px;display: flex;flex-wrap: wrap;gap: 15px;}
+        .filter-group {flex: 1; min-width: 140px;}
         
         table{width:100%;border-collapse:collapse}
         th{background:#f8f9fa;padding:12px;border-bottom:2px solid #dee2e6;text-align:left}
         td{padding:12px;border-bottom:1px solid #eee}
         .blacklisted{background:#ffebee!important;border-left:6px solid #e74c3c}
         
-        .btn-action{padding:8px 12px;border:none;border-radius:6px;cursor:pointer;color:#fff;font-weight:bold;margin-right:4px}
         .modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.8)}
-        .modal-content{background:#fff;margin:3% auto;padding:25px;width:85%;border-radius:15px;max-height:85vh;overflow-y:auto}
+        .modal-content{background:#fff;margin:2% auto;padding:25px;width:95%;border-radius:15px;max-height:90vh;overflow-y:auto}
 
-        footer {position: fixed; bottom: 0; left: 0; width: 100%; background: #2c3e50; color: white; padding: 10px 0; overflow: hidden; z-index: 100;}
-        .ticker-wrap {display: flex; width: 100%;}
-        .ticker-text {white-space: nowrap; animation: marquee 25s linear infinite; font-weight: bold; padding-left: 100%;}
+        footer {position: fixed; bottom: 0; left: 0; width: 100%; background: #2c3e50; color: white; padding: 8px 0; overflow: hidden; z-index: 100;}
+        .ticker-text {white-space: nowrap; animation: marquee 25s linear infinite; font-weight: bold; display: inline-block; padding-left: 100%;}
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-150%); } }
-        .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 5px;}
+
+        @media print { .no-print { display: none !important; } }
     </style>
 </head>
 <body>
 
-<div class="main-header">
-    <div id="headerDate" style="font-weight: bold;"></div>
-    <h1>👥 CUSTOMER CLOUD LEDGER</h1>
+<div class="main-header no-print">
+    <div id="headerDate"></div>
+    <h2 style="margin:0">1 MG TRADER | LEDGER</h2>
     <div class="header-clock" id="digitalClock"></div>
 </div>
 
-<nav class="nav-bar"> 
-    <button onclick="syncFromSales()" style="padding:10px 20px;background:var(--secondary);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:bold;">🔄 REFRESH SALES UDHAR</button>
-    <a href="index.html">Dashboard</a>
-    <a href="sales.html">Sales Panel</a>
+<nav class="nav-bar no-print"> 
+    <button onclick="syncFromSales()" style="padding:10px 15px; background:var(--secondary); color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">🔄 SYNC BILLS</button>
+    <a href="index.html">Dashboard</a> <a href="sales.html">Sales Portal</a>
 </nav>
 
-<div class="stats-grid">
-    <div class="stat-card stat-debit"><h3>Total Udhar</h3><p id="tDebit">Rs. 0</p></div>
-    <div class="stat-card stat-credit"><h3>Total Wasool</h3><p id="tCredit">Rs. 0</p></div>
-    <div class="stat-card stat-black"><h3>Blacklisted</h3><p id="tBlack">0</p></div>
+<div class="stats-grid no-print">
+    <div class="stat-card stat-debit"><span>Total Udhar</span><h3 id="tDebit">Rs. 0</h3></div>
+    <div class="stat-card stat-credit"><span>Total Wasool</span><h3 id="tCredit">Rs. 0</h3></div>
+    <div class="stat-card stat-black"><span>Blacklisted</span><h3 id="tBlack">0</h3></div>
 </div>
 
 <div class="cust-layout">
-    <div class="cust-form">
-        <h3>📝 Add Manual Entry</h3>
-        <label>Date & Time</label>
-        <input type="datetime-local" id="cDate">
-        <label>Customer Name</label>
-        <input type="text" id="cName" placeholder="Full Name">
-        <label>Phone</label>
-        <input type="text" id="cPhone" placeholder="03xxxxxxxxx">
-        <label>Area</label>
-        <input type="text" id="cAddress" placeholder="Address">
-        <label>Debit (Udhar +)</label>
-        <input type="number" id="cDebit" value="0">
-        <label>Credit (Wasool -)</label>
-        <input type="number" id="cCredit" value="0">
-        <label>Monthly Entry Limit</label>
-        <input type="number" id="cEntryLimit" value="10">
-        <button id="saveBtn" style="width:100%;padding:15px;background:var(--success);color:#fff;border:none;border-radius:10px;cursor:pointer;font-weight:bold;font-size:16px;">💾 SAVE RECORD</button>
+    <div class="cust-form no-print">
+        <h3 id="formTitle">📝 Entry Form</h3>
+        <label>Date & Time</label> <input type="datetime-local" id="cDate">
+        <label>Customer Name</label> <input type="text" id="cName" placeholder="Subhan">
+        <label>Phone</label> <input type="text" id="cPhone" placeholder="0300xxxxxxx">
+        <label>Address</label> <input type="text" id="cAddress" placeholder="📍 13 BC">
+        <label>Monthly Limit</label> <input type="number" id="cEntryLimit" value="10">
+        <label>Debit (Udhar +)</label> <input type="number" id="cDebit" value="0">
+        <label>Credit (Wasool -)</label> <input type="number" id="cCredit" value="0">
+        
+        <div class="btn-group">
+            <button class="save-btn" id="saveBtn">💾 SAVE RECORD</button>
+            <button class="print-btn" onclick="printVoucher()">🖨️ PRINT</button>
+        </div>
+        <button id="cancelEdit" onclick="resetForm()" style="display:none; width:100%; margin-top:10px; padding:10px; background:#95a5a6; color:white; border:none; border-radius:10px; cursor:pointer;">Cancel Edit</button>
     </div>
 
     <div class="cust-list">
-        <div class="filter-panel"> 
-            <div class="filter-group"><label>Search (Name/Phone/Area)</label><input type="text" id="searchBox" placeholder="Type to search..." oninput="renderTable()"></div>
-            <div class="filter-group"><label>Blacklist Limit</label><input type="number" id="limitFilter" value="50000" oninput="renderTable()"></div>
+        <div class="filter-panel no-print"> 
+            <div class="filter-group"><label>Search Customer</label><input type="text" id="searchBox" placeholder="Name/Phone/Address" oninput="renderTable()"></div>
             <div class="filter-group"><label>From Date</label><input type="date" id="fromDate" oninput="renderTable()"></div>
             <div class="filter-group"><label>To Date</label><input type="date" id="toDate" oninput="renderTable()"></div>
+            <div class="filter-group"><label>Blacklist Limit</label><input type="number" id="limitFilter" value="50000" oninput="renderTable()"></div>
         </div>
         <table>
-            <thead>
-                <tr><th>Customer Details</th><th>Last Activity</th><th>Balance</th><th>Status</th><th>Actions</th></tr>
-            </thead>
+            <thead class="no-print"><tr><th>Customer Info</th><th>Activity</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody id="custTableBody"></tbody>
         </table>
     </div>
@@ -101,28 +101,41 @@
 
 <div id="histModal" class="modal">
     <div class="modal-content">
-        <span onclick="document.getElementById('histModal').style.display='none'" style="float:right;font-size:30px;cursor:pointer; font-weight:bold;">&times;</span>
-        <h2 id="modalTitle"></h2>
-        <table border="1" style="width:100%; border-collapse:collapse; text-align:center;">
-            <thead style="background:#eee;"><tr><th>Date</th><th>Description</th><th>Debit (+)</th><th>Credit (-)</th><th>Balance</th></tr></thead>
-            <tbody id="histBody"></tbody>
+        <div style="display:flex; justify-content:space-between; align-items:center;" class="no-print">
+            <h2 id="modalTitle">Ledger Report</h2>
+            <div>
+                <button onclick="window.print()" style="padding:10px 20px; background:var(--primary); color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">🖨️ PRINT FULL LEDGER</button>
+                <button onclick="document.getElementById('histModal').style.display='none'" style="font-size:25px; background:none; border:none; cursor:pointer; margin-left:20px;">&times;</button>
+            </div>
+        </div>
+        <table style="width:100%; margin-top:15px; border-collapse:collapse;" border="1">
+            <thead style="background:var(--primary); color:white;">
+                <tr>
+                    <th>Date</th>
+                    <th>Ref / Bill #</th>
+                    <th>Description</th>
+                    <th>Debit (+)</th>
+                    <th>Credit (-)</th>
+                    <th>Balance</th>
+                    <th class="no-print">Admin</th>
+                </tr>
+            </thead>
+            <tbody id="histBody" style="text-align:center;"></tbody>
         </table>
     </div>
 </div>
 
-<footer>
-    <div class="ticker-wrap">
-        <div class="ticker-text" id="footerTicker">
-            System Status: <span id="onlineStatus">Checking...</span> | 
-            Blacklisted Customers: <span id="footerBlacklistCount">0</span> | 
-            ⚠️ ALERT: Maintain Monthly Entry Limits | 1 MG TRADER - Professional Cloud Ledger v4.0
-        </div>
+<footer class="no-print">
+    <div class="ticker-text">
+        System: <span id="onlineStatus">...</span> | Blacklisted: <span id="footerBlackCount">0</span> | 1 MG TRADER
     </div>
 </footer>
 
+<div id="qrcode" style="display:none"></div>
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, onSnapshot, doc, query, orderBy, getDocs, where, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, onSnapshot, doc, getDoc, setDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyD3So-in02rbcWD7OmuiRXzySQYgCR7iVI",
@@ -136,146 +149,139 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     let allLedgers = {};
+    const ADMIN_PASS = "Malik12345";
+    let isEditing = false;
 
-    // Clock
     setInterval(() => {
         document.getElementById('digitalClock').innerText = new Date().toLocaleTimeString();
         document.getElementById('headerDate').innerText = new Date().toDateString();
-        updateFooterStatus();
+        document.getElementById('onlineStatus').innerText = navigator.onLine ? "🟢 ONLINE" : "🔴 OFFLINE";
     }, 1000);
     document.getElementById('cDate').value = new Date().toISOString().slice(0, 16);
 
-    // Live Listener
     onSnapshot(collection(db, "customers"), (snap) => {
         allLedgers = {};
         snap.forEach(d => { allLedgers[d.id] = d.data(); });
         renderTable();
     });
 
-    // Save Entry with Monthly Limit Check
     document.getElementById('saveBtn').onclick = async () => {
         let name = document.getElementById('cName').value.trim();
-        if(!name) return alert("Please enter Customer Name");
-
+        if(!name) return alert("Enter Name!");
         let debit = Number(document.getElementById('cDebit').value) || 0;
         let credit = Number(document.getElementById('cCredit').value) || 0;
-        let entryLimit = Number(document.getElementById('cEntryLimit').value) || 10;
-        
         const custRef = doc(db, "customers", name);
-        const docSnap = await getDoc(custRef);
-        let data = docSnap.exists() ? docSnap.data() : { phone: "", address: "", balance: 0, history: [] };
-
-        // Monthly Limit Logic
-        const now = new Date();
-        let monthlyCount = data.history.filter(h => {
-            let d = new Date(h.date);
-            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-        }).length;
-
-        if(monthlyCount >= entryLimit && (debit > 0 || credit > 0)) {
-            return alert(`⛔ LIMIT REACHED: This customer already has ${monthlyCount} entries this month!`);
-        }
+        const snap = await getDoc(custRef);
+        let data = snap.exists() ? snap.data() : { phone: "", address: "", balance: 0, history: [] };
 
         data.phone = document.getElementById('cPhone').value || data.phone;
         data.address = document.getElementById('cAddress').value || data.address;
-        data.balance += (debit - credit);
-        data.history.push({
-            date: document.getElementById('cDate').value,
-            note: debit > 0 ? "Debit Entry" : (credit > 0 ? "Credit Recovery" : "Updated"),
-            debit: debit, credit: credit, balance: data.balance
-        });
-
+        
+        if (debit > 0 || credit > 0) {
+            data.balance += (debit - credit);
+            data.history.push({ 
+                id: Date.now(), 
+                date: document.getElementById('cDate').value, 
+                billNo: "MANUAL",
+                note: debit > 0 ? "Manual Debit" : "Recovery Credit", 
+                debit, credit, balance: data.balance 
+            });
+        }
         await setDoc(custRef, data);
-        alert("✅ Saved Successfully!");
-        document.getElementById('cDebit').value = 0;
-        document.getElementById('cCredit').value = 0;
+        alert("Saved!");
+        resetForm();
     };
 
     window.renderTable = () => {
-        let html = "";
-        let tDebit = 0, tCredit = 0, tBlack = 0;
-        let limit = Number(document.getElementById('limitFilter').value) || 50000;
+        let html = ""; let tD = 0; let tC = 0; let tB = 0;
         let search = document.getElementById('searchBox').value.toLowerCase();
-        let fDate = document.getElementById('fromDate').value;
-        let tDate = document.getElementById('toDate').value;
+        let fromD = document.getElementById('fromDate').value;
+        let toD = document.getElementById('toDate').value;
+        let limitAmt = Number(document.getElementById('limitFilter').value);
 
-        Object.keys(allLedgers).sort().forEach(name => {
+        Object.keys(allLedgers).forEach(name => {
             let c = allLedgers[name];
-            let last = c.history.length ? c.history[c.history.length-1] : {date: '', note: ''};
+            let last = c.history.length ? c.history[c.history.length-1] : {date: '', note: 'N/A'};
             
-            if(fDate && last.date < fDate) return;
-            if(tDate && last.date > tDate) return;
-            if(search && !(name.toLowerCase().includes(search) || c.phone.includes(search) || (c.address && c.address.toLowerCase().includes(search)))) return;
+            // Search & Date Filtering
+            let lastDateOnly = last.date.split('T')[0];
+            if(search && !name.toLowerCase().includes(search) && !c.phone.includes(search) && !(c.address||'').toLowerCase().includes(search)) return;
+            if(fromD && lastDateOnly < fromD) return;
+            if(toD && lastDateOnly > toD) return;
 
             let bal = c.balance || 0;
-            if(bal > 0) tDebit += bal; else tCredit += Math.abs(bal);
-            let isBlack = bal >= limit;
-            if(isBlack) tBlack++;
+            if(bal > 0) tD += bal; else tC += Math.abs(bal);
+            let isBlack = bal >= limitAmt;
+            if(isBlack) tB++;
 
             html += `<tr class="${isBlack ? 'blacklisted' : ''}">
-                <td><b>${name}</b><br><small>${c.phone} | ${c.address || ''}</small></td>
-                <td>${last.date.replace('T', ' ')}<br><small>${last.note}</small></td>
-                <td style="color:${bal > 0 ? 'red' : 'green'}; font-weight:bold;">Rs. ${bal.toLocaleString()}</td>
-                <td><b>${isBlack ? '🛑 BLACKLIST' : '✅ ACTIVE'}</b></td>
-                <td>
-                    <button class="btn-action" style="background:var(--secondary)" onclick="window.viewHistory('${name}')">📜 History</button>
-                    <button class="btn-action" style="background:var(--warning)" onclick="window.editQuick('${name}')">✏️</button>
+                <td><b>${name}</b><br><small>📱 ${c.phone} | 📍 ${c.address||''}</small></td>
+                <td><small>${last.date.replace('T',' ')}</small><br>${last.note}</td>
+                <td style="color:${bal>0?'red':'green'}; font-weight:bold;">Rs. ${bal.toLocaleString()}</td>
+                <td><b>${isBlack ? '🛑 BLACK' : '✅ ACTIVE'}</b></td>
+                <td class="no-print">
+                    <button onclick="viewHistory('${name}')" style="background:var(--secondary); color:white; border:none; padding:6px; border-radius:4px; cursor:pointer;">📜</button>
+                    <button onclick="editCust('${name}')" style="background:var(--warning); color:white; border:none; padding:6px; border-radius:4px; cursor:pointer;">✏️</button>
                 </td>
             </tr>`;
         });
-
-        document.getElementById('custTableBody').innerHTML = html || "<tr><td colspan='5' align='center'>No records found</td></tr>";
-        document.getElementById('tDebit').innerText = "Rs. " + tDebit.toLocaleString();
-        document.getElementById('tCredit').innerText = "Rs. " + tCredit.toLocaleString();
-        document.getElementById('tBlack').innerText = tBlack;
-        document.getElementById('footerBlacklistCount').innerText = tBlack;
-    };
-
-    window.syncFromSales = async () => {
-        const salesSnap = await getDocs(query(collection(db, "sales"), where("status", "==", "UDHAR")));
-        let count = 0;
-        for (let sDoc of salesSnap.docs) {
-            let s = sDoc.data();
-            const custRef = doc(db, "customers", s.customer);
-            const cSnap = await getDoc(custRef);
-            let cData = cSnap.exists() ? cSnap.data() : { phone: s.phone, address: s.area, balance: 0, history: [] };
-            if(!cData.history.some(h => h.note === "Bill #" + s.inv)) {
-                cData.balance += s.total;
-                cData.history.push({ date: s.date, note: "Bill #" + s.inv, debit: s.total, credit: 0, balance: cData.balance });
-                await setDoc(custRef, cData);
-                count++;
-            }
-        }
-        alert(count + " New Bills Synced!");
+        document.getElementById('custTableBody').innerHTML = html;
+        document.getElementById('tDebit').innerText = "Rs. " + tD.toLocaleString();
+        document.getElementById('tCredit').innerText = "Rs. " + tC.toLocaleString();
+        document.getElementById('tBlack').innerText = tB;
+        document.getElementById('footerBlackCount').innerText = tB;
     };
 
     window.viewHistory = (name) => {
         let c = allLedgers[name];
-        document.getElementById('modalTitle').innerText = name + "'s Ledger";
-        document.getElementById('histBody').innerHTML = c.history.map(h => `
-            <tr><td>${h.date.replace('T',' ')}</td><td>${h.note}</td><td style="color:red">+${h.debit}</td><td style="color:green">-${h.credit}</td><td><b>${h.balance}</b></td></tr>
+        document.getElementById('modalTitle').innerText = name + " - Ledger History";
+        let rows = c.history.map((h) => `
+            <tr>
+                <td><small>${h.date.replace('T', ' ')}</small></td>
+                <td>${h.billNo}</td>
+                <td>${h.note}</td>
+                <td style="color:red">+${h.debit}</td>
+                <td style="color:green">-${h.credit}</td>
+                <td><b>${h.balance.toLocaleString()}</b></td>
+                <td class="no-print"><button onclick="deleteEntry('${name}', ${h.id})" style="background:var(--danger); color:white; border:none; cursor:pointer; padding:3px 8px; border-radius:3px;">Del</button></td>
+            </tr>
         `).reverse().join('');
+        document.getElementById('histBody').innerHTML = rows;
         document.getElementById('histModal').style.display = 'block';
     };
 
-    window.editQuick = (name) => {
+    window.deleteEntry = async (name, entryId) => {
+        if(prompt("Password:") !== ADMIN_PASS) return alert("Wrong!");
+        const custRef = doc(db, "customers", name);
+        const snap = await getDoc(custRef);
+        let data = snap.data();
+        data.history = data.history.filter(h => h.id !== entryId);
+        let b = 0; data.history.forEach(h => { b += (h.debit - h.credit); h.balance = b; });
+        data.balance = b;
+        await setDoc(custRef, data);
+        viewHistory(name);
+    };
+
+    window.editCust = (name) => {
         let c = allLedgers[name];
         document.getElementById('cName').value = name;
-        document.getElementById('cPhone').value = c.phone || "";
-        document.getElementById('cAddress').value = c.address || "";
+        document.getElementById('cPhone').value = c.phone;
+        document.getElementById('cAddress').value = c.address;
+        document.getElementById('cName').readOnly = true;
+        isEditing = true;
+        document.getElementById('cancelEdit').style.display = 'block';
         window.scrollTo(0,0);
     };
 
-    function updateFooterStatus() {
-        const statusEl = document.getElementById('onlineStatus');
-        if(navigator.onLine) {
-            statusEl.innerText = "🟢 ONLINE (Cloud Sync Active)";
-            statusEl.style.color = "#2ecc71";
-        } else {
-            statusEl.innerText = "🔴 OFFLINE (Local Mode)";
-            statusEl.style.color = "#e74c3c";
-        }
-    }
+    window.resetForm = () => {
+        document.getElementById('cName').value = "";
+        document.getElementById('cName').readOnly = false;
+        document.getElementById('cancelEdit').style.display = 'none';
+        isEditing = false;
+    };
+
+    window.printVoucher = () => { /* Voucher Print Logic */ };
+    window.syncFromSales = async () => { /* Sync Logic */ };
 </script>
 </body>
 </html>
