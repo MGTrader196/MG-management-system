@@ -2,159 +2,224 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>1 MG Trader | Business Reports</title>
+    <title>1 MG Trader | Master Admin Report</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding-bottom: 100px; }
-        .report-layout { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+        :root { --primary: #1e293b; --secondary: #3b82f6; --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --bg: #f1f5f9; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; }
+
+        /* Header & Nav */
+        .header { background: var(--primary); color: white; padding: 15px 20px; text-align: center; position: relative; }
+        .user-badge { position: absolute; top: 15px; right: 20px; background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 20px; font-size: 11px; color: #fbbf24; border: 1px solid rgba(255,255,255,0.2); }
+        .nav-bar { margin-top: 10px; display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; }
+        .nav-bar a { color: white; text-decoration: none; font-size: 13px; font-weight: 600; }
+
+        .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; }
+
+        /* Master Filter Panel */
+        .master-filter { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); margin-bottom: 25px; display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; }
+        .filter-group { flex: 1; min-width: 150px; }
+        .filter-group label { font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px; }
+        .filter-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+
+        .selectors { flex: 2; min-width: 300px; display: flex; gap: 10px; flex-wrap: wrap; background: #f8fafc; padding: 10px; border-radius: 8px; }
+        .selectors label { font-size: 12px; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+
+        /* Report Sections */
+        .report-section { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px; display: none; overflow-x: auto; }
+        .section-visible { display: block !important; }
         
-        /* Stats Grid */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
-        .stat-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; position: relative; overflow: hidden; }
-        .stat-card h3 { margin: 0; font-size: 14px; color: #7f8c8d; text-transform: uppercase; }
-        .stat-card h2 { margin: 10px 0; font-size: 28px; color: #2c3e50; }
-        .stat-card.sale { border-top: 5px solid #27ae60; }
-        .stat-card.expense { border-top: 5px solid #e74c3c; }
-        .stat-card.profit { border-top: 5px solid #f1c40f; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th { background: #f8fafc; color: #64748b; padding: 12px; text-align: left; border-bottom: 2px solid #eee; font-size: 12px; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
 
-        /* Charts Section */
-        .charts-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; }
-        .chart-box { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); height: 350px; }
-
-        .btn-refresh { background: #2c3e50; color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }
-        .btn-home { background: #7f8c8d; color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-block; }
+        .badge { padding: 4px 8px; border-radius: 5px; font-size: 11px; font-weight: bold; }
+        .badge-success { background: #d1fae5; color: #10b981; }
+        .badge-danger { background: #fee2e2; color: #ef4444; }
 
         /* Footer Ticker */
-        .footer-ticker { position: fixed; bottom: 0; left: 0; width: 100%; background: #2c3e50; color: white; padding: 10px 0; overflow: hidden; z-index: 1000; }
-        .ticker-wrap { display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite; font-weight: bold; }
-        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        footer { position: fixed; bottom: 0; width: 100%; background: #0f172a; color: white; padding: 10px 0; z-index: 1000; border-top: 2px solid var(--secondary); overflow: hidden; }
+        .ticker-move { display: inline-block; white-space: nowrap; animation: ticker 25s linear infinite; font-weight: 600; font-size: 13px; color: #94a3b8; padding-left: 100%; }
+        @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+
+        @media print {
+            .no-print { display: none !important; }
+            .report-section { display: block !important; box-shadow: none; border: 1px solid #eee; }
+            .print-head { display: flex !important; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--secondary); padding-bottom: 10px; margin-bottom: 20px; }
+        }
+
+        @media (max-width: 768px) {
+            .master-filter { flex-direction: column; align-items: stretch; }
+            .nav-bar a { margin: 5px; }
+        }
     </style>
 </head>
 <body>
-      <header class="main-header no-print" style="background: #2c3e50; color: white; padding: 15px; text-align: center;">
-    <h2 style="margin: 0;">📦 1 MG TRADER</h2>
-    <nav style="margin-top: 10px;">
-        <a href="index.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">🏠 Dashboard</a>
-        <a href="sales.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">🛒 Sales</a>
-        <a href="products.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">📦 Inventory</a>
-        <a href="workers.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">👥 Workers</a>
-        <a href="reports.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">📊 Reports</a>
-    </nav>
-</header>
-<header style="background: #2c3e50; color: white; padding: 15px; text-align: center; font-size: 22px; font-weight: bold;">
-    📊 Business Intelligence Reports | 1 MG Trader
-</header>
 
-<div class="report-layout">
-    <div>
-        <button class="btn-refresh" onclick="loadReports()">🔄 Update Reports</button>
-        <a href="index.html" class="btn-home">🏠 Back to Home</a>
-    </div>
-
-    <div class="stats-grid">
-        <div class="stat-card sale">
-            <h3>Total Sales</h3>
-            <h2 id="totalSales">Rs. 0</h2>
-        </div>
-        <div class="stat-card expense">
-            <h3>Total Expenses</h3>
-            <h2 id="totalExpenses">Rs. 0</h2>
-        </div>
-        <div class="stat-card profit">
-            <h3>Net Profit / Loss</h3>
-            <h2 id="netProfit">Rs. 0</h2>
-        </div>
-    </div>
-
-    <div class="charts-container">
-        <div class="chart-box">
-            <h4 style="text-align: center;">Sales vs Expenses (Monthly)</h4>
-            <canvas id="mainChart"></canvas>
-        </div>
-        <div class="chart-box">
-            <h4 style="text-align: center;">Expense Breakdown</h4>
-            <canvas id="expensePieChart"></canvas>
-        </div>
+<div class="header no-print">
+    <div class="user-badge">👤 Admin: <span id="displayUser">Malik Admin</span></div>
+    <h2 style="margin:0;">🚀 1 MG TRADER | Master Command</h2>
+    <div class="nav-bar">
+        <a href="index.html">🏠 Home</a>
+        <a href="sales.html">🛒 Sales</a>
+        <a href="expenses.html">💸 Expenses</a>
+        <a href="products.html">📦 Stock</a>
+        <a href="customers.html">👥 Customers</a>
     </div>
 </div>
 
-<div class="footer-ticker">
-    <div class="ticker-wrap">Business Performance Report | 1 MG Trader | Track Your Growth Daily | All Data is Secured Locally</div>
+<div class="container">
+    <div class="master-filter no-print">
+        <div class="filter-group"><label>From</label><input type="date" id="dateFrom"></div>
+        <div class="filter-group"><label>To</label><input type="date" id="dateTo"></div>
+        <div class="selectors">
+            <label><input type="checkbox" id="checkSales" checked> Sales</label>
+            <label><input type="checkbox" id="checkExp" checked> Expenses</label>
+            <label><input type="checkbox" id="checkStock" checked> Stock</label>
+            <label><input type="checkbox" id="checkCust" checked> Customers</label>
+        </div>
+        <button onclick="generateReport()" style="background:var(--success); color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:bold;">Generate</button>
+        <button onclick="window.print()" style="background:var(--secondary); color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:bold;">Print Report</button>
+    </div>
+
+    <div class="print-head" style="display:none;">
+        <div>
+            <h1 style="margin:0; color:var(--secondary);">1 MG TRADER</h1>
+            <p>Master Business Audit Report | <span id="printDate"></span></p>
+        </div>
+        <div id="printQR"></div>
+    </div>
+
+    <div id="secSales" class="report-section">
+        <h3>🛒 Sales History</h3>
+        <table>
+            <thead><tr><th>Date</th><th>Invoice</th><th>Customer</th><th>Amount</th></tr></thead>
+            <tbody id="salesBody"></tbody>
+        </table>
+    </div>
+
+    <div id="secExp" class="report-section">
+        <h3>💸 Expenses</h3>
+        <table>
+            <thead><tr><th>Date</th><th>Category</th><th>Details</th><th>Amount</th></tr></thead>
+            <tbody id="expBody"></tbody>
+        </table>
+    </div>
+
+    <div id="secStock" class="report-section">
+        <h3>📦 Stock Inventory (Warnings Included)</h3>
+        <table>
+            <thead><tr><th>Code</th><th>Product Name</th><th>Company</th><th>Stock</th><th>Status</th></tr></thead>
+            <tbody id="stockBody"></tbody>
+        </table>
+    </div>
+
+    <div id="secCust" class="report-section">
+        <h3>👥 Customer Ledgers (Receivables)</h3>
+        <table>
+            <thead><tr><th>Customer Name</th><th>Phone</th><th>Address</th><th>Current Balance</th></tr></thead>
+            <tbody id="custBody"></tbody>
+        </table>
+    </div>
 </div>
 
-<script>
-    function loadReports() {
-        // Data fetch karna (localStorage se)
-        let salesData = JSON.parse(localStorage.getItem('mg_sales_history')) || [];
-        let expenseData = JSON.parse(localStorage.getItem('mg_expenses')) || [];
+<footer class="no-print">
+    <div class="ticker-move">
+        🟢 1 MG Trader Cloud System Live | Logged in: <span id="footerUser">Admin</span> | Password Protection Active | Data Auto-Synced with Firebase | Malik12345 Secure Access Enabled
+    </div>
+</footer>
 
-        // 1. Total Sales Calculation
-        let totalS = salesData.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
-        
-        // 2. Total Expense Calculation
-        let totalE = expenseData.reduce((sum, item) => sum + (parseFloat(item.amt) || 0), 0);
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // 3. Net Profit
-        let profit = totalS - totalE;
+    const firebaseConfig = {
+        apiKey: "AIzaSyD3So-in02rbcWD7OmuiRXzySQYgCR7iVI",
+        authDomain: "mg-tradere.firebaseapp.com",
+        projectId: "mg-tradere",
+        storageBucket: "mg-tradere.firebasestorage.app",
+        messagingSenderId: "318790809953",
+        appId: "1:318790809953:web:5e829277f6d161e9942d20"
+    };
 
-        // UI Update
-        document.getElementById('totalSales').innerText = "Rs. " + totalS.toLocaleString();
-        document.getElementById('totalExpenses').innerText = "Rs. " + totalE.toLocaleString();
-        document.getElementById('netProfit').innerText = "Rs. " + profit.toLocaleString();
-        document.getElementById('netProfit').style.color = profit >= 0 ? "#27ae60" : "#e74c3c";
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const CURRENT_USER = localStorage.getItem('logged_admin_id') || "Malik-Admin";
+    document.getElementById('displayUser').innerText = CURRENT_USER;
+    document.getElementById('footerUser').innerText = CURRENT_USER;
 
-        renderCharts(totalS, totalE, expenseData);
+    window.generateReport = async function() {
+        const from = document.getElementById('dateFrom').value;
+        const to = document.getElementById('dateTo').value;
+        document.getElementById('printDate').innerText = (from || "All Time") + " to " + (to || "Today");
+
+        // Toggle Sections
+        document.getElementById('secSales').classList.toggle('section-visible', document.getElementById('checkSales').checked);
+        document.getElementById('secExp').classList.toggle('section-visible', document.getElementById('checkExp').checked);
+        document.getElementById('secStock').classList.toggle('section-visible', document.getElementById('checkStock').checked);
+        document.getElementById('secCust').classList.toggle('section-visible', document.getElementById('checkCust').checked);
+
+        // 1. Fetch Sales
+        if(document.getElementById('checkSales').checked) {
+            const snap = await getDocs(collection(db, "sales_history"));
+            let html = "";
+            snap.forEach(d => {
+                const data = d.data();
+                const dDate = data.date ? data.date.split('T')[0] : "";
+                if((!from || dDate >= from) && (!to || dDate <= to)) {
+                    html += `<tr><td>${data.date}</td><td>${data.inv}</td><td>${data.customer}</td><td>Rs. ${data.total}</td></tr>`;
+                }
+            });
+            document.getElementById('salesBody').innerHTML = html;
+        }
+
+        // 2. Fetch Expenses
+        if(document.getElementById('checkExp').checked) {
+            const snap = await getDocs(collection(db, "expenses"));
+            let html = "";
+            snap.forEach(d => {
+                const data = d.data();
+                const dDate = data.date.split('T')[0];
+                if((!from || dDate >= from) && (!to || dDate <= to)) {
+                    html += `<tr><td>${data.date}</td><td>${data.cat}</td><td>${data.desc}</td><td>Rs. ${data.amt}</td></tr>`;
+                }
+            });
+            document.getElementById('expBody').innerHTML = html;
+        }
+
+        // 3. Fetch Stock (Warning Logic)
+        if(document.getElementById('checkStock').checked) {
+            const snap = await getDocs(collection(db, "products"));
+            let html = "";
+            snap.forEach(d => {
+                const p = d.data();
+                const isLow = parseFloat(p.qty) <= parseFloat(p.min);
+                html += `<tr>
+                    <td>${p.code}</td><td>${p.name}</td><td>${p.company}</td>
+                    <td style="color:${isLow ? 'red':'black'}; font-weight:bold;">${p.qty}</td>
+                    <td><span class="badge ${isLow ? 'badge-danger':'badge-success'}">${isLow ? '⚠️ Warning':'✅ Available'}</span></td>
+                </tr>`;
+            });
+            document.getElementById('stockBody').innerHTML = html;
+        }
+
+        // 4. Fetch Customers
+        if(document.getElementById('checkCust').checked) {
+            const snap = await getDocs(collection(db, "customers"));
+            let html = "";
+            snap.forEach(d => {
+                const c = d.data();
+                html += `<tr><td>${d.id}</td><td>${c.phone}</td><td>${c.address}</td><td style="color:red; font-weight:bold;">Rs. ${c.balance || 0}</td></tr>`;
+            });
+            document.getElementById('custBody').innerHTML = html;
+        }
+
+        // Generate QR for Print
+        document.getElementById('printQR').innerHTML = "";
+        new QRCode(document.getElementById('printQR'), { text: "1MG-REPORT-" + Date.now(), width: 70, height: 70 });
     }
-
-    let myChart, myPieChart; // Chart instances
-
-    function renderCharts(s, e, expenseDetails) {
-        // Destroy old charts if exist
-        if(myChart) myChart.destroy();
-        if(myPieChart) myPieChart.destroy();
-
-        // Bar Chart (Sales vs Expenses)
-        const ctx = document.getElementById('mainChart').getContext('2d');
-        myChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Sales', 'Expenses'],
-                datasets: [{
-                    label: 'Amount in Rs.',
-                    data: [s, e],
-                    backgroundColor: ['#27ae60', '#e74c3c'],
-                    borderRadius: 10
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-
-        // Pie Chart (Expenses by Category)
-        const pieCtx = document.getElementById('expensePieChart').getContext('2d');
-        
-        // Group expenses by category
-        let cats = {};
-        expenseDetails.forEach(ex => {
-            cats[ex.cat] = (cats[ex.cat] || 0) + parseFloat(ex.amt);
-        });
-
-        myPieChart = new Chart(pieCtx, {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(cats),
-                datasets: [{
-                    data: Object.values(cats),
-                    backgroundColor: ['#3498db', '#e67e22', '#9b59b6', '#f1c40f', '#1abc9c']
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-    }
-
-    // Initial Load
-    window.onload = loadReports;
 </script>
-
 </body>
 </html>
