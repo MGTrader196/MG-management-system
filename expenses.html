@@ -3,135 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <title>1 MG Trader | Daily Expenses Cloud</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --primary: #1e293b; --secondary: #e67e22; --bg: #f1f5f9; --text: #334155; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding-bottom: 100px; color: var(--text); }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding-bottom: 100px; }
         
-        /* Header & Admin Badge */
+        /* Header & Nav Bar */
         .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         .user-badge { position: absolute; top: 15px; right: 20px; background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 20px; font-size: 11px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold; color: #fbbf24; }
-        
+        .nav-bar { margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
+        .nav-bar a { color: white; text-decoration: none; margin: 0 15px; font-weight: 600; font-size: 13px; transition: 0.3s; }
+        .nav-bar a:hover { color: var(--secondary); }
+
         .expense-layout { display: flex; flex-wrap: wrap; padding: 20px; gap: 20px; max-width: 1400px; margin: auto; }
-        .expense-card { flex: 1; min-width: 320px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); height: fit-content; border-top: 4px solid var(--secondary); }
+        .expense-card { flex: 1; min-width: 320px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-top: 4px solid var(--secondary); height: fit-content; }
         .expense-list { flex: 2; min-width: 350px; }
 
-        /* Modern Filter & Search Panel */
-        .filter-panel { background: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .filter-group { flex: 1; min-width: 150px; }
-        .search-box { flex: 2; min-width: 250px; position: relative; }
-        .search-box i { position: absolute; left: 15px; top: 38px; color: var(--secondary); }
-        .search-box input { padding-left: 40px !important; border-radius: 50px !important; border: 2px solid #e2e8f0 !important; }
+        /* Inputs */
+        label { font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; background: #f8fafc; margin-bottom: 10px; }
 
-        label { font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 5px; display: block; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; background: #f8fafc; font-size: 13px; }
-        input:focus { border-color: var(--secondary); outline: none; background: #fff; }
+        /* Buttons */
+        .btn-add { width: 100%; background: linear-gradient(135deg, #e67e22, #d35400); color: white; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .action-btn { border: none; background: none; cursor: pointer; padding: 5px; font-size: 14px; transition: 0.2s; }
+        .edit-btn { color: #f59e0b; }
+        .del-btn { color: #ef4444; }
+        .print-btn { color: #3b82f6; }
 
-        .btn-add { width: 100%; background: linear-gradient(135deg, #e67e22, #d35400); color: white; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; transition: 0.3s; }
-        .btn-add:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(230, 126, 34, 0.4); }
-
-        /* Table Styling */
+        /* Table */
         .list-container { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
         .ex-table { width: 100%; border-collapse: collapse; }
-        .ex-table th { background: #f8fafc; color: #64748b; text-align: left; padding: 12px; border-bottom: 2px solid #eee; font-size: 12px; }
+        .ex-table th { background: #f8fafc; color: #64748b; text-align: left; padding: 12px; border-bottom: 2px solid #eee; }
         .ex-table td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
-        
+
         .total-box { background: var(--primary); color: white; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-        
-        /* Action Buttons */
-        .action-btn { border: none; background: none; cursor: pointer; padding: 5px; font-size: 16px; transition: 0.2s; }
-        .print-btn { color: #3b82f6; }
-        .del-btn { color: #ef4444; }
-        .action-btn:hover { transform: scale(1.2); }
 
-        /* Live Footer */
-        footer { position: fixed; bottom: 0; width: 100%; background: #0f172a; color: white; padding: 8px 0; z-index: 1000; border-top: 2px solid var(--secondary); }
-        .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; background: #10b981; box-shadow: 0 0 8px #10b981; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
-        .marquee { flex: 1; overflow: hidden; white-space: nowrap; margin: 0 20px; font-size: 12px; color: #94a3b8; }
+        /* Smooth Scrolling Footer */
+        footer { position: fixed; bottom: 0; width: 100%; background: #0f172a; color: white; padding: 10px 0; z-index: 1000; border-top: 2px solid var(--secondary); overflow: hidden; }
+        .ticker-wrap { display: flex; width: 100%; }
+        .ticker-move { display: inline-block; white-space: nowrap; animation: ticker 25s linear infinite; padding-left: 100%; font-weight: 600; font-size: 13px; color: #94a3b8; }
+        @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .expense-layout { padding: 10px; }
-            .filter-panel { flex-direction: column; align-items: stretch; }
-            .header h2 { font-size: 18px; }
-            .user-badge { position: static; margin-bottom: 10px; display: inline-block; }
+        /* Print Style */
+        @media print {
+            .no-print { display: none !important; }
+            .only-print { display: block !important; }
+            .print-header { display: flex !important; justify-content: space-between; align-items: center; border-bottom: 3px solid #e67e22; padding-bottom: 10px; margin-bottom: 20px; }
+            .total-box { background: #e67e22 !important; color: white !important; -webkit-print-color-adjust: exact; box-shadow: 5px 5px 0px #1e293b; }
         }
-        @media print { .no-print { display: none !important; } body { background: white; } .expense-list { width: 100%; } }
     </style>
 </head>
 <body>
 
 <div class="header no-print">
-    <div class="user-badge">👤 Admin: <span id="displayUser">Loading...</span></div>
-    <h2 style="margin: 0;">💸 Expense Cloud Console</h2>
-    <nav style="margin-top: 10px;">
-        <a href="index.html" style="color: white; text-decoration: none; margin: 0 10px; font-size: 13px; font-weight: 600;">🏠 Dashboard</a>
-        <a href="companies.html" style="color: white; text-decoration: none; margin: 0 10px; font-size: 13px; font-weight: 600;">🏢 Companies</a>
-    </nav>
+    <div class="user-badge">👤 Admin: <span id="displayUser">Admin</span></div>
+    <h1 style="margin: 0; font-size: 24px;"> MG TRADER Cloud Expenses</h1>
+    <div class="nav-bar">
+        <a href="index.html">🏠 DASHBOARD</a>
+        <a href="sales.html">🛒 SALES</a>
+        <a href="products.html">📦 INVENTORY</a>
+        <a href="companies.html">🏢 COMPANIES</a>
+        <a href="workers.html">👥 WORKERS</a>
+    </div>
 </div>
 
 <div class="expense-layout">
     <div class="expense-card no-print">
-        <h3><i class="fa fa-plus-circle"></i> Add New Expense</h3>
-        <div class="form-group">
-            <label>Expense Category</label>
-            <select id="exCat">
-                <option value="Food">🍱 Food / Tea</option>
-                <option value="Bill">⚡ Utility Bills</option>
-                <option value="Rent">🏠 Rent</option>
-                <option value="Salary">💰 Staff Salary</option>
-                <option value="Other">🛠️ Others</option>
-            </select>
-        </div>
-        <div class="form-group" style="margin-top:10px;">
-            <label>Description / Note</label>
-            <input type="text" id="exDesc" placeholder="e.g. Tea for guests">
-        </div>
-        <div class="form-group" style="margin-top:10px;">
-            <label>Amount (Rs.)</label>
-            <input type="number" id="exAmount" placeholder="0.00">
-        </div>
-        <div class="form-group" style="margin-top:10px;">
-            <label>Expense Date</label>
-            <input type="datetime-local" id="exDateTime">
-        </div>
-        <button class="btn-add" id="saveBtn"><i class="fa fa-save"></i> Save to Cloud</button>
+        <h3>➕ Add Expense</h3>
+        <label>Description</label>
+        <input type="text" id="exDesc" placeholder="Maal ki detail">
+        <label>Amount (Rs.)</label>
+        <input type="number" id="exAmount" placeholder="0.00">
+        <label>Category</label>
+        <select id="exCat">
+            <option value="Food">🍱 Food / Tea</option>
+            <option value="Bill">⚡ Bills</option>
+            <option value="Rent">🏠 Rent</option>
+            <option value="Salary">💰 Salary</option>
+            <option value="Other">🛠️ Other</option>
+        </select>
+        <label>Date & Time</label>
+        <input type="datetime-local" id="exDateTime">
+        <button class="btn-add" id="saveBtn">💾 Save to Cloud</button>
     </div>
 
     <div class="expense-list">
-        <div class="filter-panel no-print">
-            <div class="search-box">
-                <label>Search Transaction</label>
-                <i class="fa fa-search"></i>
-                <input type="text" id="searchBox" placeholder="Search by description or category..." oninput="renderExpenses()">
-            </div>
-            <div class="filter-group">
-                <label>From Date</label>
-                <input type="date" id="filterFrom" onchange="renderExpenses()">
-            </div>
-            <div class="filter-group">
-                <label>To Date</label>
-                <input type="date" id="filterTo" onchange="renderExpenses()">
-            </div>
+        <div class="filter-panel no-print" style="background:white; padding:15px; border-radius:15px; margin-bottom:15px; display:flex; gap:10px; align-items:flex-end; box-shadow:0 4px 10px rgba(0,0,0,0.05);">
+            <div style="flex:1;"><label>From</label><input type="date" id="filterFrom" onchange="renderExpenses()"></div>
+            <div style="flex:1;"><label>To</label><input type="date" id="filterTo" onchange="renderExpenses()"></div>
+            <button onclick="window.print()" style="background:#3b82f6; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:bold;"><i class="fa fa-print"></i> Print Report</button>
         </div>
 
         <div class="total-box">
-            <span style="font-weight:bold; text-transform:uppercase; letter-spacing:1px;">Filtered Total</span>
+            <span style="font-weight:bold;">FILTERED TOTAL</span>
             <h2 id="totalDisplay" style="margin:0; color:#fbbf24;">Rs. 0</h2>
         </div>
-        
+
         <div class="list-container" id="printArea">
-            <div class="only-print" style="display:none; text-align:center; margin-bottom:20px;">
-                <h1 style="color:#1e293b; margin:0;">1 MG TRADER</h1>
-                <p>Expense Report | <span id="printDateRange">Full History</span></p>
+            <div class="print-header only-print" style="display:none;">
+                <div>
+                    <h1 style="color:#e67e22; margin:0;">1 MG TRADER</h1>
+                    <p style="margin:2px 0;">Expense Audit Report | Cloud Backup</p>
+                    <small id="printMeta"></small>
+                </div>
+                <div id="printQR"></div>
             </div>
             <table class="ex-table">
                 <thead>
                     <tr>
                         <th>Date & Time</th>
                         <th>Category</th>
-                        <th>Details (Admin)</th>
+                        <th>Detail & Admin</th>
                         <th>Amount</th>
                         <th class="no-print">Actions</th>
                     </tr>
@@ -143,15 +126,10 @@
 </div>
 
 <footer class="no-print">
-    <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 20px;">
-        <div>
-            <span class="status-dot"></span>
-            <span style="font-size:11px; font-weight:bold; color:#10b981;">CLOUD SYNC ACTIVE</span>
+    <div class="ticker-wrap">
+        <div class="ticker-move" id="liveTicker">
+            🟢 System Live |  MG Trader Management | Cloud Sync Enabled | Malik Secure | Filter your dates to generate 3D reports | All rights reserved 2026
         </div>
-        <div class="marquee">
-            <span id="liveTicker">System running smoothly | Logged in as: Malik Admin | 1 MG Trader Management System v5.0</span>
-        </div>
-        <div style="font-size:11px; color:#94a3b8;">Offline Backup: ENABLED</div>
     </div>
 </footer>
 
@@ -172,13 +150,11 @@
     const db = getFirestore(app);
     let allExpenses = [];
     const ADMIN_PASS = "Malik12345";
-    const CURRENT_USER = localStorage.getItem('logged_admin_id') || "Malik-Admin"; 
+    const CURRENT_USER = localStorage.getItem('logged_admin_id') || "Malik-Admin";
     document.getElementById('displayUser').innerText = CURRENT_USER;
 
-    // Set Default Time
     document.getElementById('exDateTime').value = new Date().toISOString().slice(0, 16);
 
-    // Live Sync from Firebase
     const q = query(collection(db, "expenses"), orderBy("id", "desc"));
     onSnapshot(q, (snap) => {
         allExpenses = [];
@@ -187,81 +163,74 @@
     });
 
     document.getElementById('saveBtn').onclick = async () => {
-        let cat = document.getElementById('exCat').value;
         let desc = document.getElementById('exDesc').value;
         let amt = parseFloat(document.getElementById('exAmount').value);
-        let date = document.getElementById('exDateTime').value;
-
-        if(!desc || isNaN(amt)) return alert("Please fill all fields!");
-
-        const exId = Date.now().toString();
-        await setDoc(doc(db, "expenses", exId), {
-            id: exId,
-            cat, desc, amt, date,
-            admin: CURRENT_USER
+        if(!desc || isNaN(amt)) return alert("Fill data!");
+        const id = Date.now().toString();
+        await setDoc(doc(db, "expenses", id), {
+            id, desc, amt, cat: document.getElementById('exCat').value,
+            date: document.getElementById('exDateTime').value, admin: CURRENT_USER
         });
-
         document.getElementById('exDesc').value = '';
         document.getElementById('exAmount').value = '';
-        alert("Expense Saved!");
     };
 
     window.renderExpenses = () => {
         let body = document.getElementById('exBody');
-        body.innerHTML = "";
         let total = 0;
-        let search = document.getElementById('searchBox').value.toLowerCase();
         let from = document.getElementById('filterFrom').value;
         let to = document.getElementById('filterTo').value;
+        body.innerHTML = "";
 
         allExpenses.forEach(ex => {
             let exDate = ex.date.split('T')[0];
-            let searchMatch = ex.desc.toLowerCase().includes(search) || ex.cat.toLowerCase().includes(search);
-            let dateMatch = (!from || exDate >= from) && (!to || exDate <= to);
-
-            if(searchMatch && dateMatch) {
+            if ((!from || exDate >= from) && (!to || exDate <= to)) {
                 total += ex.amt;
-                body.innerHTML += `
-                    <tr>
-                        <td><b>${ex.date.replace('T', ' ')}</b></td>
-                        <td><span style="background:#f1f5f9; padding:3px 8px; border-radius:5px; font-size:11px;">${ex.cat}</span></td>
-                        <td>${ex.desc}<br><small style="color:#3b82f6;">By: ${ex.admin || 'System'}</small></td>
-                        <td style="font-weight:bold; color:var(--primary);">Rs. ${ex.amt.toLocaleString()}</td>
-                        <td class="no-print">
-                            <button class="action-btn print-btn" onclick="printSingle('${ex.id}')"><i class="fa fa-print"></i></button>
-                            <button class="action-btn del-btn" onclick="deleteEx('${ex.id}')"><i class="fa fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
+                body.innerHTML += `<tr>
+                    <td><small>${ex.date.replace('T',' ')}</small></td>
+                    <td>${ex.cat}</td>
+                    <td>${ex.desc}<br><small style="color:blue">By: ${ex.admin || 'Admin'}</small></td>
+                    <td style="font-weight:bold;">${ex.amt.toLocaleString()}</td>
+                    <td class="no-print">
+                        <button class="action-btn print-btn" onclick="printSingle('${ex.id}')"><i class="fa fa-print"></i></button>
+                        <button class="action-btn edit-btn" onclick="editEx('${ex.id}')"><i class="fa fa-edit"></i></button>
+                        <button class="action-btn del-btn" onclick="deleteEx('${ex.id}')"><i class="fa fa-trash"></i></button>
+                    </td>
+                </tr>`;
             }
         });
         document.getElementById('totalDisplay').innerText = "Rs. " + total.toLocaleString();
+        document.getElementById('printMeta').innerText = `Date: ${from || 'All'} to ${to || 'Today'} | Admin: ${CURRENT_USER}`;
+        
+        document.getElementById('printQR').innerHTML = "";
+        new QRCode(document.getElementById('printQR'), { text: "1MG-TOTAL-" + total, width: 60, height: 60 });
+    };
+
+    window.editEx = async (id) => {
+        if(prompt("Enter Admin Pass:") !== ADMIN_PASS) return alert("Wrong!");
+        let ex = allExpenses.find(e => e.id === id);
+        let newAmt = prompt("New Amount:", ex.amt);
+        let newDesc = prompt("New Description:", ex.desc);
+        if(newAmt && newDesc) {
+            await setDoc(doc(db, "expenses", id), { ...ex, amt: parseFloat(newAmt), desc: newDesc });
+        }
     };
 
     window.deleteEx = async (id) => {
-        if(prompt("Enter Admin Password to Delete:") !== ADMIN_PASS) return alert("Wrong Password!");
+        if(prompt("Password to Delete:") !== ADMIN_PASS) return alert("Wrong!");
         await deleteDoc(doc(db, "expenses", id));
     };
 
     window.printSingle = (id) => {
         const ex = allExpenses.find(e => e.id === id);
-        const printWindow = window.open('', '', 'height=600,width=800');
-        printWindow.document.write(`
-            <html><head><title>Expense Receipt</title>
-            <style>body{font-family:sans-serif; padding:40px; text-align:center; border:2px solid #000;} h1{margin:0;}</style>
-            </head><body>
-            <h1>1 MG TRADER</h1><p>Expense Receipt</p><hr>
-            <div style="text-align:left; margin-top:20px;">
-                <p><b>Date:</b> ${ex.date}</p>
-                <p><b>Category:</b> ${ex.cat}</p>
-                <p><b>Description:</b> ${ex.desc}</p>
-                <p><b>Amount:</b> Rs. ${ex.amt}</p>
-                <p><b>Admin:</b> ${ex.admin}</p>
-            </div>
-            <hr><p style="font-size:10px;">Generated by  MG Trader Management System</p>
-            <script>window.print(); window.close();<\/script>
-            </body></html>
-        `);
+        const win = window.open('', '', 'height=500,width=400');
+        win.document.write(`<html><body style="text-align:center; padding:20px; border:2px solid #000;">
+            <h2 style="margin:0;">1 MG TRADER</h2><p>Expense Slip</p><hr>
+            <div style="text-align:left;">
+            <p><b>Date:</b> ${ex.date}</p><p><b>Cat:</b> ${ex.cat}</p>
+            <p><b>Desc:</b> ${ex.desc}</p><p><b>Amount:</b> Rs. ${ex.amt}</p>
+            <p><b>Admin:</b> ${ex.admin}</p></div><hr>
+            <script>window.print(); window.close();<\/script></body></html>`);
     };
 </script>
 </body>
