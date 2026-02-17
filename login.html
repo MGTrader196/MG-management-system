@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>1 MG Trader | Secure Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { 
             background: radial-gradient(circle at center, #2c3e50 0%, #000000 100%); 
@@ -34,11 +35,12 @@
         .sub-text { color: #3498db; font-size: 13px; font-weight: bold; margin-bottom: 30px; text-transform: uppercase; }
         .input-group { margin-bottom: 20px; text-align: left; position: relative; }
         label { color: #bdc3c7; font-size: 11px; margin-bottom: 8px; display: block; letter-spacing: 1px; }
-        input { 
+        input, select { 
             width: 100%; padding: 15px; background: rgba(255,255,255,0.1);
             border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; 
             color: white; font-size: 16px; outline: none; box-sizing: border-box;
         }
+        select option { background: #2c3e50; color: white; }
         .btn-login { 
             width: 100%; padding: 16px; border-radius: 12px; cursor: pointer; 
             font-size: 16px; font-weight: 900; text-transform: uppercase; border: none;
@@ -47,14 +49,48 @@
         }
         .btn-login:hover { background: #2980b9; transform: translateY(-2px); }
         #msg { margin-top: 15px; font-size: 13px; font-weight: bold; display: none; padding: 10px; border-radius: 8px; }
-        .error { color: #ff7675; background: rgba(255, 118, 117, 0.1); }
+        .error { color: #ff7675; background: rgba(255, 118, 117, 0.1); border: 1px solid rgba(255, 118, 117, 0.3); }
+
+        /* --- Footer Styles --- */
+        footer {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: #2c3e50; color: white; z-index: 100;
+            border-top: 2px solid #3498db;
+        }
+        .footer-main {
+            display: flex; justify-content: space-around; align-items: center;
+            padding: 10px 20px; background: rgba(0,0,0,0.2); font-size: 13px;
+        }
+        .online-dot { color: #2ecc71; font-weight: bold; animation: blink 1.5s infinite; }
+        .dev-name { color: #f1c40f; font-weight: bold; font-style: italic; }
+        
+        /* Moving Ticker Area */
+        .footer-ticker {
+            background: #1a252f; padding: 5px 0; overflow: hidden; white-space: nowrap;
+        }
+        .ticker-text {
+            display: inline-block;
+            padding-left: 100%;
+            animation: marquee 25s linear infinite;
+            font-size: 11px; letter-spacing: 1px; color: #bdc3c7;
+        }
+
+        /* Animations */
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
     </style>
 </head>
 <body>
 
 <div class="top-system-bar">
     <div id="liveDate">DATE: --/--/----</div>
-    <div>🔒 ONLINE ERP TERMINAL</div>
+    <div>🔒 SECURE TERMINAL ACCESS</div>
     <div id="liveClock">TIME: 00:00:00</div>
 </div>
 
@@ -63,7 +99,17 @@
         <div class="header-icon">📦</div>
         <h2>1 MG TRADER</h2>
         <div class="sub-text">Inventory ERP System</div>
-        
+
+        <div class="input-group">
+            <label>LOGIN ROLE</label>
+            <select id="loginRole">
+                <option value="">Select Access Level</option>
+                <option value="admin">Administrator</option>
+                <option value="Order Booker">Order Booker</option>
+                <option value="Salesman">Salesman</option>
+            </select>
+        </div>
+
         <div class="input-group">
             <label>ENTER USER ID</label>
             <input type="text" id="uId" placeholder="User ID">
@@ -71,7 +117,8 @@
         
         <div class="input-group">
             <label>ENTER PASSWORD</label>
-            <input type="password" id="uPass" placeholder="••••••••">
+            <input type="password" id="uPass" placeholder="Password">
+            <i class="fa fa-eye" id="toggleIcon" onclick="togglePassword()" style="position: absolute; right: 15px; bottom: 15px; cursor: pointer; color: #3498db;"></i>
         </div>
         
         <div id="msg"></div>
@@ -81,93 +128,79 @@
     </div>
 </div>
 
-<script type="module">
-    // Firebase Library Setup
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+<footer>
+    <div class="footer-main">
+        <div><span class="online-dot">● ONLINE</span> SYSTEM STATUS</div>
+        <div><strong>1 MG TRADER</strong> | INVENTORY PRO</div>
+        <div>DESIGNED BY: <span class="dev-name">MALIK FAISAL</span></div>
+    </div>
+    <div class="footer-ticker">
+        <div class="ticker-text">
+            Authorized Access Only | 1 MG TRADER Secure Cloud v5.0 | High-Speed Data Sync Enabled | Managed by Malik Faisal | All Rights Reserved 2024-25 ©
+        </div>
+    </div>
+</footer>
 
-    // Aapka Firebase Config
-    const firebaseConfig = {
-        apiKey: "AIzaSyD3So-in02rbcWD7OmuiRXzySQYgCR7iVI",
-        authDomain: "mg-tradere.firebaseapp.com",
-        projectId: "mg-tradere",
-        storageBucket: "mg-tradere.firebasestorage.app",
-        messagingSenderId: "318790809953",
-        appId: "1:318790809953:web:5e829277f6d161e9942d20"
-    };
+<script>
+    function togglePassword() {
+        const passField = document.getElementById('uPass');
+        const icon = document.getElementById('toggleIcon');
+        if (passField.type === "password") {
+            passField.type = "text";
+            icon.classList.replace("fa-eye", "fa-eye-slash");
+        } else {
+            passField.type = "password";
+            icon.classList.replace("fa-eye-slash", "fa-eye");
+        }
+    }
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // Login Button Functionality
     const loginBtn = document.getElementById('loginBtn');
-    loginBtn.addEventListener('click', async () => {
-        const id = document.getElementById('uId').value.trim();
-        const pass = document.getElementById('uPass').value.trim();
-        const msg = document.getElementById('msg');
+    const msg = document.getElementById('msg');
 
-        if (!id || !pass) {
-            msg.innerText = "⚠ Credentials Likhen!";
+    loginBtn.addEventListener('click', () => {
+        const role = document.getElementById('loginRole').value;
+        const id = document.getElementById('uId').value.trim().toLowerCase();
+        const pass = document.getElementById('uPass').value.trim();
+
+        if(!role || !id || !pass) {
+            msg.innerText = "⚠ Tamam fields bharein!";
             msg.className = "error";
             msg.style.display = "block";
             return;
         }
 
-        // Master Admin Access
-        if (id === "admin" && pass === "123") {
-            sessionStorage.setItem("isLoggedIn", "true");
-            sessionStorage.setItem("userRole", "Admin");
-            window.location.href = "index.html";
-            return;
+        let success = false;
+        let targetPage = "";
+        let userName = "";
+
+        if(role === "admin" && id === "malik" && pass === "Malik12345") {
+            success = true; targetPage = "index.html"; userName = "Admin Malik";
+        } 
+        else if(role === "Order Booker" && id === "subhan" && pass === "subhan123") {
+            success = true; targetPage = "orders.html"; userName = "Subhan";
+        } 
+        else if(role === "Salesman" && id === "haroon" && pass === "haroon123") {
+            success = true; targetPage = "sales.html"; userName = "Haroon";
         }
 
-        try {
-            msg.innerText = "Authenticating with Cloud...";
-            msg.style.display = "block";
-            msg.style.color = "#3498db";
-
-            const q = query(collection(db, "users"), where("id", "==", id), where("pass", "==", pass));
-            const querySnapshot = await getDocs(q);
-
-            if (!querySnapshot.empty) {
-                const user = querySnapshot.docs[0].data();
-                sessionStorage.setItem("isLoggedIn", "true");
-                sessionStorage.setItem("userRole", user.type);
-                window.location.href = "index.html";
-            } else {
-                msg.innerText = "❌ Access Denied: ID ya Password Galat Hai!";
-                msg.className = "error";
-                msg.style.display = "block";
-            }
-        } catch (e) {
-            msg.innerText = "⚠️ Network Error: Check Internet Connection!";
+        if(success) {
+            sessionStorage.setItem("isLoggedIn", "true");
+            sessionStorage.setItem("userRole", role);
+            sessionStorage.setItem("loggedUser", userName);
+            localStorage.setItem("isLoggedIn", "true");
+            window.location.href = targetPage;
+        } else {
+            msg.innerText = "❌ Ghalat ID ya Password!";
             msg.className = "error";
             msg.style.display = "block";
         }
     });
 
-    // System Clock
     setInterval(() => {
         const now = new Date();
         document.getElementById('liveClock').innerText = "TIME: " + now.toLocaleTimeString();
         document.getElementById('liveDate').innerText = "DATE: " + now.toLocaleDateString();
     }, 1000);
 </script>
-
-
-
-
-
-         <footer style="position: fixed; bottom: 0; left: 0; width: 100%; background: #2c3e50; color: white; padding: 10px 0; overflow: hidden; z-index: 100;">
-    <div class="ticker-text" style="display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite;">
-        Offline Local System | 1 MG Trader | Managed by Management System | All Rights Reserved 2024-25
-    </div>
-</footer>
-
-<style>
-@keyframes marquee {
-    0% { transform: translateX(100%); }
-    100% { transform: translateX(-100%); }
-}
 </body>
 </html>
