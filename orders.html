@@ -7,13 +7,50 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --primary: #2c3e50; --accent: #f39c12; --success: #27ae60; --danger: #e74c3c; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding-bottom: 60px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #121212; margin: 0; padding-bottom: 60px; }
         
         .main-header { background: var(--primary); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
         .log-badge { background: var(--accent); color: var(--primary); padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; }
         
-        .order-container { max-width: 1200px; margin: 20px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
-        .order-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+/* Desktop Layout (Wahi purana) */
+.order-container { 
+    max-width: 1200px; 
+    margin: 20px auto; 
+    padding: 0 20px; 
+    display: grid; 
+    grid-template-columns: 1fr 380px; /* Do hissay */
+    gap: 35px; 
+    align-items: start; 
+}
+
+/* Mobile Layout (Jab screen choti ho) */
+@media screen and (max-width: 900px) {
+    .order-container {
+        display: block; /* Grid khatam karke simple block kar diya */
+        padding: 0 10px;
+    }
+
+    .order-card {
+        width: 100%; /* Box poori width le lega */
+        margin-bottom: 20px; /* Boxes ke darmiyan gap */
+        display: block;
+    }
+
+    /* Form ke andar jo 3 columns hain unko bhi ek ke niche ek kar dein */
+    .grid-3 {
+        display: block !important;
+    }
+    
+    .grid-3 div {
+        margin-bottom: 10px;
+    }
+
+    /* Product add karne wali line ko bhi mobile par set karein */
+    .input-group div {
+        width: 100% !important;
+        margin-bottom: 10px;
+    }
+}        .order-card { background: white; padding: 25px; border-radius: 12px;margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
         /* Your Requested Layout Colors */
         .input-group { background: #f8f9fa; border-radius: 10px; padding: 15px; margin-bottom: 15px; border-left: 5px solid var(--primary); }
@@ -27,9 +64,24 @@
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th { background: #eee; padding: 10px; text-align: left; font-size: 13px; }
         td { padding: 10px; border-bottom: 1px solid #eee; }
+        .btn-print-3d {
+    background: linear-gradient(145deg, #3498db, #2980b9);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 0 4px #1c5980; /* 3D effect */
+    transition: 0.1s;
+}
+
+.btn-print-3d:active {
+    box-shadow: 0 1px #1c5980;
+    transform: translateY(3px);
+}
 
         /* Footer Warning Ticker */
-        .footer-ticker { position: fixed; bottom: 0; width: 100%; background: #c0392b; color: white; padding: 10px 0; overflow: hidden; z-index: 1000; }
+        .footer-ticker { position: fixed; bottom: 0; width: 100%; background: #ecf0f1; color: #2c3e50;; padding: 10px 0; overflow: hidden; z-index: 1000; }
         .ticker-content { display: inline-block; white-space: nowrap; animation: marquee 25s linear infinite; }
         @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
     </style>
@@ -38,7 +90,7 @@
 
 <div class="main-header">
     <div class="log-badge" id="logDisplay">Log by ...</div>
-    <h2 style="margin:0;">1 MG TRADER</h2>
+    <h2 style="margin:0;"> MG TRADER</h2>
     <button onclick="logout()" style="background:var(--danger); color:white; border:none; padding:5px 15px; border-radius:5px; cursor:pointer;">Logout</button>
 </div>
 
@@ -79,10 +131,26 @@
     </div>
 
     <div class="order-card">
-        <h3>📋 Order History</h3>
-        <div id="historyPanel" style="max-height: 500px; overflow-y: auto;">
-            <p style="text-align:center; color:#999;">No history available.</p>
-        </div>
+    <h3>📋 Order History</h3>
+    <label>Search History</label>
+    <input type="text" id="orderSearch" onkeyup="searchOrders()" placeholder="Search Shop Name..." style="width:100%; padding:10px; margin-bottom:10px;">
+    
+    <div id="historyPanel" style="max-height: 500px; overflow-y: auto;">
+        <table style="width:100%; font-size:12px;">
+            <thead>
+                <tr style="background:#f1f1f1;">
+                    <th>Shop</th>
+                    <th>Total</th>
+                    <th>Status</th> <th>Action</th> </tr>
+            </thead>
+            <tbody id="historyTableBody"></tbody>
+            <div style="overflow-x: auto;">
+    <table>
+        <thead>...</thead>
+        <tbody id="cartTable"></tbody>
+    </table>
+</div>
+        </table>
     </div>
 </div>
 
@@ -202,19 +270,80 @@
     };
 
     function loadHistory() {
-        const q = query(collection(db, "orders"), orderBy("timestamp", "desc"));
-        onSnapshot(q, (snap) => {
-            const panel = document.getElementById('historyPanel');
-            panel.innerHTML = "";
-            snap.forEach(d => {
-                const o = d.data();
-                panel.innerHTML += `<div style="border-bottom:1px solid #eee; padding:10px; font-size:12px;">
-                    <b>${o.shop}</b><br>Rs. ${o.total.toFixed(0)} | ${o.date}<br>
-                    <small>By: ${o.booker}</small>
-                </div>`;
-            });
+    const q = query(collection(db, "orders"), orderBy("timestamp", "desc"));
+    onSnapshot(q, (snap) => {
+        const body = document.getElementById('historyTableBody');
+        body.innerHTML = "";
+        
+        // Ek array bana lein taake print ke waqt data mil sake
+        window.historyData = []; 
+
+        snap.forEach(d => {
+            const o = d.data();
+            o.id = d.id;
+            window.historyData.push(o);
+
+            const status = o.status || "Pending"; // Agar status nahi hai to Pending dikhaye
+            
+            body.innerHTML += `
+                <tr>
+                    <td><b>${o.shop}</b><br><small>${o.date}</small></td>
+                    <td>Rs. ${o.total.toFixed(0)}</td>
+                    <td style="color: ${status === 'Delivered' ? 'green' : 'orange'}; font-weight:bold;">
+                        ${status}
+                    </td>
+                    <td>
+                        <button class="btn-print-3d" onclick="printOrderBill('${d.id}')">
+                           <i class="fa fa-print"></i>
+                        </button>
+                    </td>
+                </tr>`;
         });
-    }
+    });
+}
+  window.printOrderBill = (id) => {
+    const order = window.historyData.find(x => x.id === id);
+    const printWin = window.open('', '', 'width=800,height=900');
+    
+    let itemsHtml = order.items.map(i => `
+        <tr>
+            <td>${i.name}</td>
+            <td>${i.qty}</td>
+            <td>${i.disc}%</td>
+            <td>${i.total}</td>
+        </tr>`).join('');
+
+    printWin.document.write(`
+        <html>
+        <body style="font-family:sans-serif; padding:20px;">
+            <div style="border:10px solid #2c3e50; padding:20px; border-radius:15px; box-shadow: 0 0 20px rgba(0,0,0,0.2);">
+                <h1 style="text-align:center; color:#2c3e50; margin:0;">1 MG TRADER</h1>
+                <p style="text-align:center; border-bottom:2px solid #f39c12; padding-bottom:10px;">OFFICIAL SALES INVOICE</p>
+                
+                <table width="100%">
+                    <tr>
+                        <td><b>Shop:</b> ${order.shop}</td>
+                        <td align="right"><b>Date:</b> ${order.date}</td>
+                    </tr>
+                </table>
+
+                <table width="100%" border="1" style="border-collapse:collapse; margin-top:20px; text-align:left;">
+                    <thead style="background:#2c3e50; color:white;">
+                        <tr><th>Item</th><th>Qty</th><th>Disc</th><th>Total</th></tr>
+                    </thead>
+                    <tbody>${itemsHtml}</tbody>
+                </table>
+
+                <h2 style="text-align:right; background:#27ae60; color:white; padding:10px; margin-top:20px;">
+                    Grand Total: Rs. ${order.total.toFixed(0)}
+                </h2>
+                <p style="font-size:10px; text-align:center;">Software Developed by Malik Faisal</p>
+            </div>
+            <script>window.print();<\/script>
+        </body>
+        </html>
+    `);
+};
 
     window.logout = () => { sessionStorage.clear(); window.location.href="login.html"; };
 </script>
