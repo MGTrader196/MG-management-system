@@ -7,36 +7,37 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        // Auth library add kar di gayi hai
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+        // YAHAN NAYA CONFIG UPDATE KAR DIYA HAI
         const firebaseConfig = {
-            apiKey: "AIzaSyAz5XvXfS-m0WjG8j9O2K9L6q4R3T1Y0", 
-            authDomain: "mg-trader.firebaseapp.com",
-            projectId: "mg-trader",
-            storageBucket: "mg-trader.appspot.com",
-            messagingSenderId: "367341339178",
-            appId: "1:367341339178:web:15848e470878a876a386b0"
+            apiKey: "AIzaSyD3So-in02rbcWD7OmuiRXzySQYgCR7iVI",
+            authDomain: "mg-tradere.firebaseapp.com",
+            projectId: "mg-tradere",
+            storageBucket: "mg-tradere.firebasestorage.app",
+            messagingSenderId: "318790809953",
+            appId: "1:318790809953:web:5e829277f6d161e9942d20",
+            measurementId: "G-E8RK34FBG2"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // Background mein login karne ka function
+        // Anonymous Login Function
         async function authenticateAdmin() {
             try {
                 await signInAnonymously(auth);
-                console.log("Login Successful!");
-                startSync(); // Login ke baad data start hoga
+                console.log("Admin Logged In Successfully!");
+                startSync(); // Login ke baad data load hoga
             } catch (error) {
                 console.error("Login Failed:", error);
-                alert("Database connection error!");
+                alert("Connection Error: Please check internet or Firebase settings.");
             }
         }
 
         function startSync() {
-            // Orders Data
+            // 1. Orders Data
             onSnapshot(collection(db, "orders"), (snap) => {
                 let html = "";
                 snap.forEach(d => {
@@ -48,7 +49,7 @@
                 document.getElementById('orderBody').innerHTML = html || "<tr><td colspan='3' style='text-align:center;'>No Pending Orders</td></tr>";
             });
 
-            // Workers & Passwords
+            // 2. Workers & Passwords
             onSnapshot(collection(db, "users"), (snap) => {
                 let wHtml = ""; let pHtml = "";
                 snap.forEach(d => {
@@ -60,7 +61,7 @@
                 document.getElementById('passBody').innerHTML = pHtml;
             });
 
-            // Alerts
+            // 3. Alerts (Stock)
             onSnapshot(collection(db, "products"), (snap) => {
                 let aHtml = "";
                 snap.forEach(d => {
@@ -79,8 +80,8 @@
                     await updateDoc(doc(db, "orders", id), { status: "Delivered" });
                     alert("Order Approved Successfully!");
                 } catch (e) {
-                    console.error(e);
-                    alert("Error: Action not allowed.");
+                    console.error("Update Error:", e);
+                    alert("Error: Action not allowed. Check Firebase Rules.");
                 }
             }
         };
