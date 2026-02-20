@@ -6,145 +6,149 @@
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        // Auth library add kar di gayi hai
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // Firebase Config
         const firebaseConfig = {
-            apiKey: "AIzaSy...", // Apna sahi API Key yahan dalen
+            apiKey: "AIzaSyAz5XvXfS-m0WjG8j9O2K9L6q4R3T1Y0", 
             authDomain: "mg-trader.firebaseapp.com",
             projectId: "mg-trader",
             storageBucket: "mg-trader.appspot.com",
-            messagingSenderId: "...",
-            appId: "..."
+            messagingSenderId: "367341339178",
+            appId: "1:367341339178:web:15848e470878a876a386b0"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
-        // --- Tabs Logic ---
-        window.openTab = (tabName, event) => {
-            let contents = document.getElementsByClassName("content-section");
-            for (let s of contents) s.style.display = "none";
-            
-            let buttons = document.getElementsByClassName("tab-btn");
-            for (let b of buttons) b.classList.remove("active");
+        // Background mein login karne ka function
+        async function authenticateAdmin() {
+            try {
+                await signInAnonymously(auth);
+                console.log("Login Successful!");
+                startSync(); // Login ke baad data start hoga
+            } catch (error) {
+                console.error("Login Failed:", error);
+                alert("Database connection error!");
+            }
+        }
 
-            document.getElementById(tabName).style.display = "block";
-            event.currentTarget.classList.add("active");
-        };
-
-        // --- Firebase Data Listeners ---
-        function initAdminSync() {
-            // 1. Orders Sync
-            const qOrders = query(collection(db, "orders"), where("status", "==", "Pending"), orderBy("timestamp", "desc"));
-            onSnapshot(qOrders, (snap) => {
-                const body = document.getElementById('orderBody');
-                body.innerHTML = snap.empty ? "<tr><td colspan='3' style='text-align:center;'>No pending orders.</td></tr>" : "";
+        function startSync() {
+            // Orders Data
+            onSnapshot(collection(db, "orders"), (snap) => {
+                let html = "";
                 snap.forEach(d => {
                     const o = d.data();
-                    body.innerHTML += `<tr><td><b>${o.shop}</b></td><td>Rs. ${o.total}</td><td><button class="btn-ok" onclick="approveOrder('${d.id}')">Delivered</button></td></tr>`;
+                    if(o.status === "Pending" || !o.status) {
+                        html += `<tr><td><b>${o.shop}</b></td><td>Rs. ${o.total}</td><td><button class="btn-ok" onclick="approveOrder('${d.id}')">Approve</button></td></tr>`;
+                    }
                 });
+                document.getElementById('orderBody').innerHTML = html || "<tr><td colspan='3' style='text-align:center;'>No Pending Orders</td></tr>";
             });
 
-            // 2. Workers Sync (User Registrations)
+            // Workers & Passwords
             onSnapshot(collection(db, "users"), (snap) => {
-                const body = document.getElementById('workerBody');
-                body.innerHTML = "";
+                let wHtml = ""; let pHtml = "";
                 snap.forEach(d => {
                     const u = d.data();
-                    body.innerHTML += `<tr><td>${u.name}</td><td>${u.role}</td><td><span style="color:${u.status==='Active'?'green':'red'}">${u.status}</span></td></tr>`;
+                    wHtml += `<tr><td>${u.name}</td><td>${u.role}</td><td>Active</td></tr>`;
+                    pHtml += `<tr><td><b>${u.role}</b></td><td>${u.id}</td><td style="color:red; font-weight:bold;">${u.pass}</td></tr>`;
                 });
+                document.getElementById('workerBody').innerHTML = wHtml;
+                document.getElementById('passBody').innerHTML = pHtml;
+            });
+
+            // Alerts
+            onSnapshot(collection(db, "products"), (snap) => {
+                let aHtml = "";
+                snap.forEach(d => {
+                    const p = d.data();
+                    if(p.qty <= (p.min || 5)) {
+                        aHtml += `<div class="alert-box">⚠️ <b>Stock Alert:</b> ${p.name} is Low (${p.qty} left)</div>`;
+                    }
+                });
+                document.getElementById('alertSection').innerHTML = aHtml || "<div>✅ System Status: All Good.</div>";
             });
         }
 
         window.approveOrder = async (id) => {
-            await updateDoc(doc(db, "orders", id), { status: "Delivered" });
-            alert("Order Approved!");
+            if(confirm("Mark as Delivered?")) {
+                try {
+                    await updateDoc(doc(db, "orders", id), { status: "Delivered" });
+                    alert("Order Approved Successfully!");
+                } catch (e) {
+                    console.error(e);
+                    alert("Error: Action not allowed.");
+                }
+            }
         };
 
-        window.onload = initAdminSync;
+        // Onload par authentication run hogi
+        window.onload = authenticateAdmin;
+
+        window.openTab = (name, e) => {
+            document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(name).style.display = 'block';
+            e.currentTarget.classList.add('active');
+        };
     </script>
 
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding-bottom: 120px; }
         .admin-header { background: #2c3e50; color: white; padding: 20px; text-align: center; }
-        .nav-bar { background: #34495e; padding: 10px; text-align: center; }
-        .nav-bar a { color: white; text-decoration: none; margin: 0 15px; font-weight: bold; }
-        
-        .container { max-width: 1100px; margin: 20px auto; padding: 0 20px; }
-        
-        .tab-wrapper { display: flex; background: #ddd; border-radius: 8px 8px 0 0; overflow: hidden; }
+        .nav-bar { background: #34495e; padding: 12px; text-align: center; }
+        .nav-bar a { color: white; text-decoration: none; margin: 0 15px; font-weight: bold; font-size: 14px; }
+        .container { max-width: 1000px; margin: 20px auto; padding: 0 20px; }
+        .tab-wrapper { display: flex; background: #ddd; border-radius: 8px 8px 0 0; }
         .tab-btn { flex: 1; padding: 15px; border: none; cursor: pointer; font-weight: bold; background: #ddd; }
-        .tab-btn.active { background: white; color: #2c3e50; border-top: 3px solid #f39c12; }
-
-        .content-area { background: white; padding: 20px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); min-height: 300px; }
+        .tab-btn.active { background: white; border-top: 3px solid #f39c12; }
+        .content-area { background: white; padding: 20px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); min-height: 350px; }
         .content-section { display: none; }
-        
         table { width: 100%; border-collapse: collapse; }
-        th { background: #f8f9fa; padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6; }
-        td { padding: 12px; border-bottom: 1px solid #eee; }
+        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
         .btn-ok { background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
-
-        /* Footer */
-        footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #2c3e50; color: white; border-top: 3px solid #3498db; }
-        .footer-main { display: flex; justify-content: space-around; align-items: center; padding: 8px 20px; font-size: 12px; }
-        .dev-name { color: #f1c40f; font-weight: bold; }
-        .footer-ticker { background: #1a252f; padding: 4px 0; overflow: hidden; }
-        .ticker-text { display: inline-block; padding-left: 100%; animation: marquee 25s linear infinite; font-size: 11px; white-space: nowrap; color: #bdc3c7; }
-        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+        .alert-box { background: #fff3e0; border-left: 5px solid #ff9800; padding: 12px; margin-bottom: 8px; border-radius: 4px; }
+        footer { position: fixed; bottom: 0; width: 100%; background: #2c3e50; color: white; text-align: center; padding: 10px; border-top: 3px solid #f39c12; }
     </style>
 </head>
 <body>
 
-<div class="admin-header"><h1>1 MG TRADER | ADMIN CONTROL</h1></div>
+<div class="admin-header"><h2>1 MG TRADER | ADMIN CONTROL</h2></div>
+
 <div class="nav-bar">
-    <a href="index.html">DASHBOARD</a>
-    <a href="inventory.html">INVENTORY</a>
-    <a href="#" onclick="sessionStorage.clear(); window.location.href='login.html'">LOGOUT</a>
+    <a href="index.html">🏠 DASHBOARD</a>
+    <a href="products.html">📦 STOCK</a>
+    <a href="customers.html">👤 CUSTOMERS</a>
 </div>
 
 <div class="container">
     <div class="tab-wrapper">
         <button class="tab-btn active" onclick="openTab('orders', event)">📦 Orders</button>
         <button class="tab-btn" onclick="openTab('workers', event)">👥 Workers</button>
-        <button class="tab-btn" onclick="openTab('requests', event)">📩 Requests</button>
         <button class="tab-btn" onclick="openTab('alerts', event)">⚠️ Alerts</button>
         <button class="tab-btn" onclick="openTab('passwords', event)">🔒 Passwords</button>
     </div>
 
     <div class="content-area">
         <div id="orders" class="content-section" style="display: block;">
-            <h3>Pending Orders Approval</h3>
-            <table>
-                <thead><tr><th>Shop</th><th>Amount</th><th>Action</th></tr></thead>
-                <tbody id="orderBody"><tr><td colspan="3" style="text-align:center;">Loading orders...</td></tr></tbody>
-            </table>
+            <table><thead><tr><th>Shop</th><th>Total</th><th>Action</th></tr></thead><tbody id="orderBody"></tbody></table>
         </div>
-
         <div id="workers" class="content-section">
-            <h3>Registered Staff Members</h3>
-            <table>
-                <thead><tr><th>Name</th><th>Role</th><th>Status</th></tr></thead>
-                <tbody id="workerBody"></tbody>
-            </table>
+            <table><thead><tr><th>Name</th><th>Role</th><th>Status</th></tr></thead><tbody id="workerBody"></tbody></table>
         </div>
-
-        <div id="requests" class="content-section"><h3>📩 Registration Requests</h3><p>Coming Soon...</p></div>
-        <div id="alerts" class="content-section"><h3>⚠️ System Alerts</h3><p>No new alerts.</p></div>
-        <div id="passwords" class="content-section"><h3>🔒 Password Management</h3><p>Admin only access.</p></div>
+        <div id="alerts" class="content-section">
+            <div id="alertSection"></div>
+        </div>
+        <div id="passwords" class="content-section">
+            <table><thead><tr><th>Role</th><th>ID</th><th>Password</th></tr></thead><tbody id="passBody"></tbody></table>
+        </div>
     </div>
 </div>
 
-<footer>
-    <div class="footer-main">
-        <div><span style="color:#2ecc71;">● ONLINE</span> STATUS</div>
-        <div><strong>1 MG TRADER</strong> | ADMIN</div>
-        <div>DESIGNED BY: <span class="dev-name">MALIK FAISAL</span></div>
-    </div>
-    <div class="footer-ticker">
-        <div class="ticker-text">Authorized Access Only | Secure Cloud v5.0 | Managed by Malik Faisal | All Rights Reserved 2026 ©</div>
-    </div>
-</footer>
+<footer>DESIGNED BY: <b>MALIK FAISAL</b></footer>
 
 </body>
 </html>
